@@ -129,12 +129,18 @@ ostream& operator<<(ostream& os, Polynomial<T> const & p) {
     return os;
 }
 
+/** Template type for multivariate polynomials
+ (using recursive instantiation)
+ @param VarCnt — polynomial variables count
+ @param Coef — polynomial coefficient type */
 template<int VarCnt, typename Coef>
 class MVPolyType {
 public:
     typedef Polynomial<typename MVPolyType<VarCnt - 1, Coef>::ResultT> ResultT;
 };
 
+/** Specialization of MVPolyType
+ for stopping recursive instantiation */
 template<typename Coef>
 class MVPolyType<1, Coef> {
 public:
@@ -151,7 +157,6 @@ int main() {
     //std::istringstream iss();
     //std::istringstream iss("[4 5 6]");
     loadPolyFromString(p2, s);
-    std::cout << "Здравствуй, Мир!" << std::endl;
     std::cout << "Число переменных Poly2: " << Poly2::VAR_CNT << std::endl;
     std::cout << "Тип Poly2: " << typeid(p2).name() << std::endl;
     std::cout << "p2: " << p2 << std::endl;
