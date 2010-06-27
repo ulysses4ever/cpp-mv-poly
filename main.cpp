@@ -122,9 +122,14 @@ void loadPolyFromString( Polynomial< Polynomial<T> > & p,
 using std::ostream;
 template <typename T>
 ostream& operator<<(ostream& os, Polynomial<T> const & p) {
+    if (p.getCoefs().empty()) {
+        os << "[]";
+        return os;
+    }
     os << '[';
-    std::copy(p.getCoefs().begin(), p.getCoefs().end(),
+    std::copy(p.getCoefs().begin(), --(p.getCoefs().end()),
             std::ostream_iterator<T>(os, " "));
+    os << *(--(p.getCoefs().end()));
     os << ']';
     return os;
 }
@@ -149,16 +154,18 @@ public:
 
 using std::cout;
 using std::endl;
+using std::string;
 
 int main() {
-    typedef MVPolyType<2, int>::ResultT Poly2;
-    Poly2 p2;
-    std::string s("[[1 2 3][4 5 6]]");
+    typedef MVPolyType<1, int>::ResultT Poly1;
+    Poly1 p1;
+    //std::string s("[[1 2 3][4 5 6]]");
     //std::istringstream iss();
     //std::istringstream iss("[4 5 6]");
-    loadPolyFromString(p2, s);
-    std::cout << "Число переменных Poly2: " << Poly2::VAR_CNT << std::endl;
-    std::cout << "Тип Poly2: " << typeid(p2).name() << std::endl;
-    std::cout << "p2: " << p2 << std::endl;
+    string s("[1 2 3]");
+    loadPolyFromString(p1, s);
+    std::cout << "Число переменных Poly1: " << Poly1::VAR_CNT << std::endl;
+    std::cout << "Тип Poly1: " << typeid(p1).name() << std::endl;
+    std::cout << "p1: " << p1 << std::endl;
 
 }
