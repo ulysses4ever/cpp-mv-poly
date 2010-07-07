@@ -1,3 +1,12 @@
+/** @file
+ * Implementation of multivariate polynomials and accompanying routines.
+ * @author Artem Pelenitsyn
+ * The main idea of current implementation of multivariate polynomials
+ * is in the fact that polynomial from say n variables is just the
+ * polynomial from one variable with coefficients being (from the ring of)
+ * polynomials from n-1 variables.
+ */
+
 #include <algorithm>
 #include <deque>
 #include <iostream>
@@ -8,12 +17,31 @@
 
 #include <boost/regex.hpp>
 
+/**
+ * Variables counter for Polynomial class template.
+ * Uses simple temp
+ * late recursion. The actual formula for the number of
+ * variables in Polynomial<T> is:
+ * <tt>VarCnt< Polynomial<T> > = 1 + VarCnt<T> ></tt>
+ * with VarCnt<T> is equal to 0 for all T not in form Polynomial<S>.
+ *
+ * For the purpose of counting the recurison depth in recursive template types
+ * like Polynomial Vandevoorde&Josuttis suggest making enum constant
+ * in recursive type itself, but we notice
+ * some code bloating when defining template specialization for
+ * recursion stopping. So we decided to make separate class (VarCnt) for this.
+ *
+ * \note The class isn't meant to be used in application code.
+ */
 template<typename T>
 class VarCnt {
 public:
     static const int result = 0;
 };
 
+/**
+ * Generic polynomial class template.
+ */
 template<typename T>
 class Polynomial {
 public:
@@ -38,12 +66,43 @@ private:
     StorageT data;
 };
 
+/// \cond
+/*
+ * Template recursion for defining polynomial variables counter continued.
+ */
 template<typename T>
 class VarCnt< Polynomial<T> > {
 public:
     static const int result = Polynomial<T>::VAR_CNT;
 };
+/// \endcond
 
+/** Neat template type for actually getting multivariate polynomials.
+ * Delivers user from writing \c Polynomial<Polynomial< ... Polynomial<int>...>.
+ @param VarCnt — polynomial variables count
+ @param Coef — polynomial coefficient type */
+template<int VarCnt, typename Coef>
+class MVPolyType {
+public:
+    typedef Polynomial<typename MVPolyType<VarCnt - 1, Coef>::ResultT> ResultT;
+};
+
+/// \cond
+/* Specialization of MVPolyType
+ for stopping recursive instantiation */
+template<typename Coef>
+class MVPolyType<1, Coef> {
+public:
+    // multivariate polynomial from 1 variable is just Polynomial
+    typedef Polynomial<Coef> ResultT;
+};
+/// \endcond
+
+/**
+ * Loading polynomial from the string.
+ * @param[out] p Polynomial instance to get in loaded data.
+ * @param[in] s String that defines contents of polynomial to de loaded.
+ */
 template<typename T>
 void loadPolyFromString( Polynomial<T> & p, std::string const & s ) {
     std::istringstream is(s);
@@ -61,7 +120,6 @@ void loadPolyFromString( Polynomial<T> & p, std::string const & s ) {
     }
 
     p.setCoefs( tempStorage );
-
 }
 
 /*
@@ -85,7 +143,6 @@ istream& operator>>(istream& is, Polynomial<T> & p) {
 
 template <typename T>
 istream& operator>>(istream& is, Polynomial< Polynomial<T> > & p) {
-*/
 
 template<typename T>
 void loadPolyFromString( Polynomial< Polynomial<T> > & p,
@@ -102,6 +159,7 @@ void loadPolyFromString( Polynomial< Polynomial<T> > & p,
         //std::copy(mt.captures.begin(), mt.end(), std::back_inserter(tempStorage));
         p.setCoefs( tempStorage );
     }
+*/
 
 /*
 
@@ -109,10 +167,19 @@ void loadPolyFromString( Polynomial< Polynomial<T> > & p,
     while ( is >> cf ) {
         tempStorage.push_back(cf);
     }
+}
 
-*/}
+*/
 
 using std::ostream;
+
+/**
+ * Generic output for mv-polynomials.
+ * @param[out] os Target output stream.
+ * @param[in] p Polynomial to be outputed in \c os.
+ * @return Output stream \c os after polynomial \c p have been
+ * outputed to \c os.
+ */
 template <typename T>
 ostream& operator<<(ostream& os, Polynomial<T> const & p) {
     if (p.getCoefs().empty()) {
@@ -126,22 +193,3 @@ ostream& operator<<(ostream& os, Polynomial<T> const & p) {
     os << ']';
     return os;
 }
-
-/** Template type for multivariate polynomials
- (using recursive instantiation)
- @param VarCnt — polynomial variables count
- @param Coef — polynomial coefficient type */
-template<int VarCnt, typename Coef>
-class MVPolyType {
-public:
-    typedef Polynomial<typename MVPolyType<VarCnt - 1, Coef>::ResultT> ResultT;
-};
-
-/** Specialization of MVPolyType
- for stopping recursive instantiation */
-template<typename Coef>
-class MVPolyType<1, Coef> {
-public:
-    typedef Polynomial<Coef> ResultT;
-};
-
