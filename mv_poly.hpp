@@ -100,6 +100,12 @@ public:
 /// \endcond
 
 using std::istream;
+/**
+ * Input polynomial from stream;
+ * @param is Stream which contains data for creating polynomial.
+ * @param p Polynomial to store.
+ * @return \c is (conventionally).
+ */
 template <typename T>
 istream& operator>>(istream& is, Polynomial<T> & p) {
     char c = 0;
