@@ -51,7 +51,8 @@ public:
 
     template<typename S>
     friend
-    void loadPolyFromString(Polynomial<S> & p, std::string const & s );
+    // void loadPolyFromString(Polynomial<S> & p, std::string const & s );
+    std::istream& operator>>(std::istream& is, Polynomial & p);
 
     Polynomial() {}
 
@@ -98,51 +99,34 @@ public:
 };
 /// \endcond
 
-/**
- * Loading polynomial from the string.
- * @param[out] p Polynomial instance to get in loaded data.
- * @param[in] s String that defines contents of polynomial to de loaded.
- */
-template<typename T>
-void loadPolyFromString( Polynomial<T> & p, std::string const & s ) {
-    std::istringstream is(s);
-    if (is.peek() == '[')
-        is.get();
-    else {
-        is.setstate(std::ios::failbit);
-        return;
-    }
-    typename Polynomial<T>::StorageT tempStorage;
-
-    typename Polynomial<T>::CoefT cf;
-    while ( is >> cf ) {
-        tempStorage.push_back(cf);
-    }
-
-    p.setCoefs( tempStorage );
-}
-
-/*
 using std::istream;
 template <typename T>
 istream& operator>>(istream& is, Polynomial<T> & p) {
-    if (is.peek() == '[')
-        is.get();
-    else
+    char c = 0;
+    is >> c;
+    if ('[' != c) {
         is.setstate(std::ios::failbit);
-    typename Polynomial<T>::StorageT tempStorage;
+        return is;
+    }
 
+    typename Polynomial<T>::StorageT tempStorage;
     typename Polynomial<T>::CoefT cf;
-    while ( is >> cf ) {
+    while ( is.peek() != ']' && is ) {
+        is >> cf;
         tempStorage.push_back(cf);
     }
 
-    p.setCoefs( tempStorage );
+    if (is) {
+        is.ignore(); // ignore trailing ']'
+        p.setCoefs( tempStorage );
+    }
     return is;
 }
 
+/*
 template <typename T>
 istream& operator>>(istream& is, Polynomial< Polynomial<T> > & p) {
+
 
 template<typename T>
 void loadPolyFromString( Polynomial< Polynomial<T> > & p,
@@ -160,16 +144,16 @@ void loadPolyFromString( Polynomial< Polynomial<T> > & p,
         p.setCoefs( tempStorage );
     }
 */
-
-/*
-
-    typename PolyT::CoefT cf;
-    while ( is >> cf ) {
-        tempStorage.push_back(cf);
-    }
+/**
+ * Loading polynomial from the string.
+ * @param[out] p Polynomial instance to get in loaded data.
+ * @param[in] s String that defines contents of polynomial to de loaded.
+ */
+template<typename T>
+void loadPolyFromString( Polynomial<T> & p, std::string const & s ) {
+    std::istringstream is(s);
+    is >> p;
 }
-
-*/
 
 using std::ostream;
 

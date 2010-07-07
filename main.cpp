@@ -23,15 +23,18 @@ using std::endl;
 using std::string;
 
 int main() {
-    typedef MVPolyType<1, int>::ResultT Poly1;
-    Poly1 p1;
-    //std::string s("[[1 2 3][4 5 6]]");
-    //std::istringstream iss();
-    //std::istringstream iss("[4 5 6]");
-    string s("[1 2 3]");
-    loadPolyFromString(p1, s);
-    std::cout << "Число переменных Poly1: " << Poly1::VAR_CNT << std::endl;
-    std::cout << "Тип Poly1: " << typeid(p1).name() << std::endl;
-    std::cout << "p1: " << p1 << std::endl;
+//    typedef MVPolyType<1, int>::ResultT Poly1;
+//    Poly1 p1;
+//    loadPolyFromString(p1, "[1 2 3]");
+//    cout << p1 << endl;
 
+//    MVPolyType<2, int>::ResultT p2;
+//    loadPolyFromString(p2, "[[1 2 3] [3 2 1] [1]]");
+//    cout  << endl << p2 << endl;
+
+//    MVPolyType<3, int>::ResultT p3;
+//    loadPolyFromString(p2, "[[[1 2] [3]] [[3] [2 1]] [[1]]]");
+//    os.str("");
+//    os << p2;
+//    s = "[[[1 2] [3]] [[3] [2 1]] [[1]]]";
 }
