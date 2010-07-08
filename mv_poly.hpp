@@ -1,21 +1,78 @@
 /** @file
+ *
  * Implementation of multivariate polynomials and accompanying routines.
- * @author Artem Pelenitsyn
  * The main idea of current implementation of multivariate polynomials
  * is in the fact that polynomial from say n variables is just the
  * polynomial from one variable with coefficients being (from the ring of)
- * polynomials from n-1 variables.
+ * polynomials from n-1 variables. This idea is implemented on the basis of
+ * template recursive instantiation.
+ *
+ * @author Artem Pelenitsyn
  */
 
 #include <algorithm>
+#include <functional>
 #include <deque>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <typeinfo>
 
-#include <boost/regex.hpp>
+#include <tr1/array>
+
+// #include <boost/logic/tribool.hpp>
+
+/**
+ * Point in N-dimensional integer lattice.
+ * @param Dim Dimension of point lattice.
+ */
+template<int Dim>
+class Point {
+    typedef std::tr1::array<int, Dim> ImplType;
+
+    ImplType data;
+
+public:
+    typename ImplType::reference
+    operator[](typename ImplType::size_type n) {
+        return data[n];
+    }
+
+    typename ImplType::const_reference
+    operator[](typename ImplType::size_type n) const {
+        return data[n];
+    }
+
+    typedef typename ImplType::iterator iterator;
+
+    typedef typename ImplType::const_iterator const_iterator;
+
+    iterator
+    begin()
+    { return data.begin(); }
+
+    const_iterator
+    begin() const
+    { return data.begin(); }
+
+    iterator
+    end()
+    { return data.end(); }
+
+    const_iterator
+    end() const
+    { return data.end(); }
+
+};
+
+template<int Dim>
+inline
+bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
+    return std::inner_product(lhs.begin(), rhs.begin(), true,
+            std::logical_and<bool>(), std::less_equal<int>());
+}
 
 /**
  * Variables counter for Polynomial class template.
@@ -31,7 +88,7 @@
  * some code bloating when defining template specialization for
  * recursion stopping. So we decided to make separate class (VarCnt) for this.
  *
- * \note The class isn't meant to be used in application code.
+ * \note The class isn't meant to be used in application (client) code.
  */
 template<typename T>
 class VarCnt {
@@ -102,8 +159,8 @@ public:
 using std::istream;
 /**
  * Input polynomial from stream;
- * @param is Stream which contains data for creating polynomial.
- * @param p Polynomial to store.
+ * @param[in,out] is Stream which contains data for creating polynomial.
+ * @param[out] p Polynomial to store.
  * @return \c is (conventionally).
  */
 template <typename T>
