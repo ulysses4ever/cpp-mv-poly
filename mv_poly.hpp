@@ -9,6 +9,8 @@
  *
  * @author Artem Pelenitsyn
  */
+#ifndef MV_POLY_HPP_
+#define MV_POLY_HPP_
 
 #include <algorithm>
 #include <functional>
@@ -22,57 +24,9 @@
 
 #include <tr1/array>
 
+#include "Point.hpp"
+
 // #include <boost/logic/tribool.hpp>
-
-/**
- * Point in N-dimensional integer lattice.
- * @param Dim Dimension of point lattice.
- */
-template<int Dim>
-class Point {
-    typedef std::tr1::array<int, Dim> ImplType;
-
-    ImplType data;
-
-public:
-    typename ImplType::reference
-    operator[](typename ImplType::size_type n) {
-        return data[n];
-    }
-
-    typename ImplType::const_reference
-    operator[](typename ImplType::size_type n) const {
-        return data[n];
-    }
-
-    typedef typename ImplType::iterator iterator;
-
-    typedef typename ImplType::const_iterator const_iterator;
-
-    iterator
-    begin()
-    { return data.begin(); }
-
-    const_iterator
-    begin() const
-    { return data.begin(); }
-
-    iterator
-    end()
-    { return data.end(); }
-
-    const_iterator
-    end() const
-    { return data.end(); }
-
-};
-
-template<int Dim>
-inline
-bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
-    return std::inner_product(lhs.begin(), rhs.begin(), true,
-            std::logical_and<bool>(), std::less_equal<int>());
-}
 
 /**
  * Variables counter for Polynomial class template.
@@ -240,3 +194,5 @@ ostream& operator<<(ostream& os, Polynomial<T> const & p) {
     os << ']';
     return os;
 }
+
+#endif /* MV_POLY_HPP_ */
