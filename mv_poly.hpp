@@ -8,6 +8,7 @@
  * template recursive instantiation.
  *
  * @author Artem Pelenitsyn
+ * @date 2010-06-28
  */
 #ifndef MV_POLY_HPP_
 #define MV_POLY_HPP_

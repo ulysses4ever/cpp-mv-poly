@@ -1,8 +1,8 @@
-/*
- * Point.hpp
+/**
+ * Describes Point class template with accompanying routines.
  *
- *  Created on: 13.07.2010
- *      Author: ulysses
+ * @date 2010-07-13
+ * @author ulysses
  */
 
 #ifndef POINT_HPP_
