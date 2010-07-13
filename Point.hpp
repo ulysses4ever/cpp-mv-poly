@@ -1,4 +1,5 @@
-/**
+/** @file
+ *
  * Describes Point class template with accompanying routines.
  *
  * @date 2010-07-13
@@ -94,7 +95,7 @@ std::ostream& operator<<(std::ostream & os, Point<Dim> const & pt) {
  * @param[in] lhs Left-hand side argument of “less”.
  * @param[in] rhs Right-hand side argument of “less”.
  * @return Result of comparison two points by coordinates: true if
- * lhs[i] <= rhs[i] for all i false otherwise.
+ * lhs[i] <= rhs[i] for all i, false otherwise.
  */
 template<int Dim>
 inline
