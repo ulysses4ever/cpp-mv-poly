@@ -53,6 +53,25 @@ public:
     end() const
     { return data.end(); }
 
+    typedef typename ImplType::reverse_iterator reverse_iterator;
+
+    typedef typename ImplType::const_reverse_iterator const_reverse_iterator;
+
+    reverse_iterator
+    rbegin()
+    { return data.rbegin(); }
+
+    const_reverse_iterator
+    rbegin() const
+    { return data.rbegin(); }
+
+    reverse_iterator
+    rend()
+    { return data.rend(); }
+
+    const_reverse_iterator
+    rend() const
+    { return data.rend(); }
 };
 
 /**
@@ -84,7 +103,13 @@ bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
             std::logical_and<bool>(), std::less_equal<int>());
 }
 
-
+/**
+ * This total oreder predicate implements monomial order. Namely graded
+ * antilexicographic order.
+ * @param[in] lhs Left-hand side argument of “less”.
+ * @param[in] rhs Right-hand side argument of “less”.
+ * @return Result of comparison two points by current monomial order.
+ */
 template<int Dim>
 inline
 bool totalLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
