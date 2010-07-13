@@ -140,27 +140,6 @@ istream& operator>>(istream& is, Polynomial<T> & p) {
     return is;
 }
 
-/*
-template <typename T>
-istream& operator>>(istream& is, Polynomial< Polynomial<T> > & p) {
-
-
-template<typename T>
-void loadPolyFromString( Polynomial< Polynomial<T> > & p,
-        std::string const & s ) {
-
-    typedef Polynomial< Polynomial<T> > PolyT;
-
-    static const boost::regex e("(\\[.*?\\] ?)*");
-
-    boost::smatch mt;
-    if (boost::regex_search(s, mt, e)) {
-
-        typename PolyT::StorageT tempStorage;
-        //std::copy(mt.captures.begin(), mt.end(), std::back_inserter(tempStorage));
-        p.setCoefs( tempStorage );
-    }
-*/
 /**
  * Loading polynomial from the string.
  * @param[out] p Polynomial instance to get in loaded data.
