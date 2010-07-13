@@ -158,7 +158,7 @@ using std::ostream;
  * @param[out] os Target output stream.
  * @param[in] p Polynomial to be outputed in \c os.
  * @return Output stream \c os after polynomial \c p have been
- * outputed to \c os.
+ * outputed to \c os (conventionally).
  */
 template <typename T>
 ostream& operator<<(ostream& os, Polynomial<T> const & p) {

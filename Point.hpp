@@ -55,18 +55,25 @@ public:
 
 };
 
+/**
+ * Simple Point output.
+ * @param[out] os Target output stream.
+ * @param[in] pt Point to be outputed in \c os.
+ * @return Output stream \c os after point \c p have been
+ * outputed to \c os (conventionally).
+ */
 template<int Dim>
 inline
-std::ostream& operator<<(std::ostream & os, Point<Dim> const & p) {
-    std::copy(p.begin(), p.end(), std::ostream_iterator<int>(os, " "));
+std::ostream& operator<<(std::ostream & os, Point<Dim> const & pt) {
+    std::copy(pt.begin(), pt.end(), std::ostream_iterator<int>(os, " "));
     return os;
 }
 
 /**
  * Compare two points by coordinates. <tt>byCoordinateLess(lhs, rhs) == true</tt> iff
  * lhs[i] <= rhs[i] for all i. It is a partial order on the set of points.
- * @param lhs Left-hand side argument of “less”.
- * @param rhs Right-hand side argument of “less”.
+ * @param[in] lhs Left-hand side argument of “less”.
+ * @param[in] rhs Right-hand side argument of “less”.
  * @return Result of comparison two points by coordinates: true if
  * lhs[i] <= rhs[i] for all i false otherwise.
  */
