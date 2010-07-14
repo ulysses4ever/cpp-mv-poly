@@ -114,15 +114,34 @@ bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
 template<int Dim>
 inline
 bool totalLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
-//    int lhsPow = lhs.weight();
-//    int rhsPow = rhs.weight();
-//    if (lhsPow == rhsPow)
-//        return lhs[0] > rhs[0];
-//    else
-//        return lhsPow < rhsPow;
     return lhs.weight() < rhs.weight()
             || std::lexicographical_compare(lhs.rbegin(), lhs.rend(),
                     rhs.rbegin(), rhs.rend());
+}
+
+/**
+ * In place point increasing following antilexicographic order.
+ * @param[in,out] pt Point to be increased.
+ */
+template<int Dim>
+inline
+void increase(Point<Dim> & pt) {
+    typename Point<Dim>::reverse_iterator rit = pt.rbegin();
+    typename Point<Dim>::reverse_iterator rit_to_inc(rit++);
+    while (rit != pt.rend()) {
+        // loop invariant: rit is one step further then rit_to_inc
+        if (*rit > 0) {
+            --*rit;
+            ++*rit_to_inc;
+            return;
+        }
+        ++rit;
+        ++rit_to_inc;
+    }
+    // rit == pt.rend()
+    // pt = (0, 0, ..., 0, a) and result shoud be (a + 1, 0, ..., 0)
+    *rit_to_inc = *pt.rbegin() + 1;
+    *pt.rbegin() = 0;
 }
 
 #endif /* POINT_HPP_ */

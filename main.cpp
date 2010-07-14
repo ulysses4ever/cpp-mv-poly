@@ -49,9 +49,16 @@ int main() {
 //    cout << !byCoordinateLess(pt1, pt2) << endl; // pt2 \not <_p pt1 as pt1 <_p pt2 (see above)
 //    cout << !byCoordinateLess(pt1, pt3) << endl; // pt1 and pt3 incomparable
 
-    Point<2> pt4, pt5;
-    pt4[0] = 1; pt4[1] = 0;
-    pt5[0] = 0; pt4[1] = 1;
-    cout << totalLess(pt4, pt5) << endl;
+//    Point<2> pt4, pt5;
+//    pt4[0] = 1; pt4[1] = 0;
+//    pt5[0] = 0; pt4[1] = 1;
+//    cout << totalLess(pt4, pt5) << endl;
+
+    Point<3> pt;
+    pt[0] = 0; pt[1] = 0; pt[2] = 0;
+    for (int i = 0; i < 12; ++i) {
+        cout << pt << endl;
+        increase(pt);
+    }
 
 }
