@@ -23,22 +23,46 @@ using std::cout;
 using std::endl;
 using std::string;
 
+//namespace my {
+    template<int N>
+    class Far {};
+
+    template<typename T>
+    class Boo {
+        typedef T Type;
+
+        static const int a = 0;
+
+        Type operator[](Far<a> const & t);
+    };
+
+    template<typename T>
+    typename Boo<T>::Type
+    Boo<T>::operator[](Far<Boo<T>::a> const & t) {}
+
+//    template<typename T>
+//    template<>
+//    void Boo<T>::f<int>() {}
+//}
+
 int main() {
 //    typedef MVPolyType<1, int>::ResultT Poly1;
 //    Poly1 p1;
 //    loadPolyFromString(p1, "[1 2 3]");
-//    cout << p1 << endl;
+    //cout << p1 << endl;
 
 //    MVPolyType<2, int>::ResultT p2;
 //    loadPolyFromString(p2, "[[1 2 3] [3 2 1] [1]]");
 //    cout  << endl << p2 << endl;
 
-//    MVPolyType<3, int>::ResultT p3;
-//    loadPolyFromString(p2, "[[[1 2] [3]] [[3] [2 1]] [[1]]]");
+    MVPolyType<3, int>::ResultT p3;
+    loadPolyFromString(p3, "[[[1 2] [3]] [[3] [2 42]] [[1]]]");
 //    os.str("");
 //    os << p2;
 //    s = "[[[1 2] [3]] [[3] [2 1]] [[1]]]";
-    //Point<5> p;
+    Point<3> pt;
+    pt[0] = 1; pt[1] = 1; pt[2] = 1;
+    cout << p3[pt];
 
 //    Point<3> pt1, pt2, pt3;
 //    pt1[0] = 3; pt1[1] = 1; pt1[2] = 2;
@@ -54,11 +78,11 @@ int main() {
 //    pt5[0] = 0; pt4[1] = 1;
 //    cout << totalLess(pt4, pt5) << endl;
 
-    Point<3> pt;
-    pt[0] = 0; pt[1] = 0; pt[2] = 0;
-    for (int i = 0; i < 12; ++i) {
-        cout << pt << endl;
-        increase(pt);
-    }
+//    Point<3> pt;
+//    pt[0] = 0; pt[1] = 0; pt[2] = 0;
+//    for (int i = 0; i < 12; ++i) {
+//        cout << pt << endl;
+//        increase(pt);
+//    }
 
 }

@@ -9,6 +9,8 @@
 #ifndef POINT_HPP_
 #define POINT_HPP_
 
+#include <tr1/array>
+
 /**
  * Point in N-dimensional integer lattice.
  * @param Dim Dimension of point lattice.
@@ -24,13 +26,19 @@ public:
         return std::accumulate(data.begin(), data.end(), 0);
     }
 
-    typename ImplType::reference
-    operator[](typename ImplType::size_type n) {
+    typedef typename ImplType::size_type size_type;
+
+    typedef typename ImplType::reference reference;
+
+    typedef typename ImplType::const_reference const_reference;
+
+    reference
+    operator[](size_type n) {
         return data[n];
     }
 
-    typename ImplType::const_reference
-    operator[](typename ImplType::size_type n) const {
+    const_reference
+    operator[](size_type n) const {
         return data[n];
     }
 
@@ -142,6 +150,38 @@ void increase(Point<Dim> & pt) {
     // pt = (0, 0, ..., 0, a) and result shoud be (a + 1, 0, ..., 0)
     *rit_to_inc = *pt.rbegin() + 1;
     *pt.rbegin() = 0;
+}
+
+/**
+ * Point slice.
+ */
+template<typename Pt>
+class Slice {
+    Pt const & pt;
+
+public:
+    Slice(Pt const & pt_) : pt(pt_) {}
+
+//    typename ImplType::reference
+//    operator[](typename ImplType::size_type n) {
+//        return pt[n + Beg];
+//    }
+    typedef typename Pt::const_reference const_reference;
+
+    typedef typename Pt::size_type size_type;
+
+    const_reference
+    operator[](size_type n) const {
+        return pt[n + 1];
+    }
+};
+
+template<int Dim>
+Point<Dim - 1> make_slice(Point<Dim> const & pt) {
+    Point<Dim - 1> result;
+    for (int i = 0; i < Dim - 1; ++i)
+        result[i] = pt[i+1];
+    return result;
 }
 
 #endif /* POINT_HPP_ */

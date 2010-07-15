@@ -23,11 +23,8 @@
 #include <string>
 #include <typeinfo>
 
-#include <tr1/array>
-
 #include "Point.hpp"
 
-// #include <boost/logic/tribool.hpp>
 
 /**
  * Variables counter for Polynomial class template.
@@ -57,14 +54,13 @@ public:
 template<typename T>
 class Polynomial {
 public:
-    typedef T                   CoefT;
-    typedef std::deque<CoefT>   StorageT;
-    static const int VAR_CNT = 1 + VarCnt<T>::result;
-
-    template<typename S>
-    friend
-    // void loadPolyFromString(Polynomial<S> & p, std::string const & s );
-    std::istream& operator>>(std::istream& is, Polynomial & p);
+//    template<typename S>
+//    friend
+//    std::istream& operator>>(std::istream& is, Polynomial & p);
+//
+//    template<typename S>
+//    friend
+//    std::ostream& operator<<(std::ostream& os, Polynomial & p);
 
     Polynomial() {}
 
@@ -72,7 +68,36 @@ public:
         loadPolyFromString(*this, s );
     }
 
+    /**
+     * Template for computing the type of multivariate polynomial coefficients.
+     */
+    template<typename S>
+    class PolyCoeff {
+    public:
+        typedef S Type;
+    };
+
+    template<typename S>
+    class PolyCoeff< Polynomial<S> > {
+    public:
+        typedef typename PolyCoeff<S>::Type Type;
+    };
+
+    typedef typename PolyCoeff<T>::Type CoefT;
+
+    static const int VAR_CNT = 1 + VarCnt<T>::result;
+
+    template<int Dim>
+    CoefT operator[](Point<Dim> const & pt) const;
+
+    CoefT operator[](int pt) const;
+
+    typedef T                   ElemT;
+
+    typedef std::deque<ElemT>   StorageT;
+
     void setCoefs(StorageT const & data)  { this->data = data; }
+
     StorageT const & getCoefs() const     { return data; }
 
 private:
@@ -89,6 +114,46 @@ public:
     static const int result = Polynomial<T>::VAR_CNT;
 };
 /// \endcond
+
+
+template<typename T, typename S, int Dim>
+T apply_subscript(S const & el, Point<Dim> const & pt) {
+        return el[pt];
+}
+
+template<typename T, typename S>
+T apply_subscript(S const & el, Point<1> const & pt) {
+        return el[pt[0]];
+}
+
+//template<typename T>
+//inline
+//Polynomial<T>::CoefT
+//apply_subscript(T const & el, Point<0> const & pt) {
+//    return el;
+//}
+
+//CoefT operator[](Point<VAR_CNT> const & pt) const;
+template<typename T>
+template<int Dim>
+typename Polynomial<T>::CoefT
+Polynomial<T>::operator[](Point< Dim/*Polynomial<T>::VAR_CNT*/ > const & pt) const {
+    //assert(Dim == VAR_CNT);
+    if (pt[0] < 0 || data.size() <= pt[0])
+        return CoefT();
+    else
+        //return data[pt[0]][make_slice(pt)];
+        return apply_subscript<Polynomial<T>::CoefT>(data[pt[0]], make_slice(pt));
+}
+
+template<typename T>
+typename Polynomial<T>::CoefT
+Polynomial<T>::operator[](int pt) const {
+    if (pt < 0 || data.size() <= pt)
+        return CoefT();
+    else
+        return data[pt];
+}
 
 /** Neat template type for actually getting multivariate polynomials.
  * Delivers user from writing \c Polynomial<Polynomial< ... Polynomial<int>...>.
@@ -128,10 +193,10 @@ istream& operator>>(istream& is, Polynomial<T> & p) {
     }
 
     typename Polynomial<T>::StorageT tempStorage;
-    typename Polynomial<T>::CoefT cf;
+    typename Polynomial<T>::ElemT el;
     while ( is.peek() != ']' && is ) {
-        is >> cf;
-        tempStorage.push_back(cf);
+        is >> el;
+        tempStorage.push_back(el);
     }
 
     if (is) {
