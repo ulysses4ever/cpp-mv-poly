@@ -22,6 +22,11 @@ class Point {
     ImplType data;
 
 public:
+    /// Creates point (0, 0, ..., 0)
+    Point() {
+        data.assign(0);
+    }
+
     int weight() const {
         return std::accumulate(data.begin(), data.end(), 0);
     }
@@ -155,33 +160,41 @@ void increase(Point<Dim> & pt) {
 /**
  * Point slice.
  */
-template<typename Pt>
+template<int Dim, int Span>
 class Slice {
-    Pt const & pt;
+    Point<Dim> const & pt;
 
 public:
-    Slice(Pt const & pt_) : pt(pt_) {}
+    Slice(Point<Dim> const & pt_) : pt(pt_) {}
 
-//    typename ImplType::reference
-//    operator[](typename ImplType::size_type n) {
-//        return pt[n + Beg];
-//    }
-    typedef typename Pt::const_reference const_reference;
+    Point<Dim> const & getImpl() {return pt;}
 
-    typedef typename Pt::size_type size_type;
+    typedef typename Point<Dim>::const_reference const_reference;
+
+    typedef typename Point<Dim>::size_type size_type;
 
     const_reference
     operator[](size_type n) const {
-        return pt[n + 1];
+        return pt[n + Span];
     }
 };
 
 template<int Dim>
-Point<Dim - 1> make_slice(Point<Dim> const & pt) {
-    Point<Dim - 1> result;
-    for (int i = 0; i < Dim - 1; ++i)
-        result[i] = pt[i+1];
-    return result;
+Slice<Dim, 1> make_slice(Point<Dim> const & pt) {
+    return Slice<Dim, 1>(pt);
 }
+
+template<int Dim, int Span>
+Slice<Dim, Span + 1> make_slice(Slice<Dim, Span> const & sl) {
+    return Slice<Dim, Span + 1>(sl.getImpl());
+}
+
+//template<int Dim>
+//Point<Dim - 1> make_slice(Point<Dim> const & pt) {
+//    Point<Dim - 1> result;
+//    for (int i = 0; i < Dim - 1; ++i)
+//        result[i] = pt[i+1];
+//    return result;
+//}
 
 #endif /* POINT_HPP_ */

@@ -90,6 +90,9 @@ public:
     template<int Dim>
     CoefT operator[](Point<Dim> const & pt) const;
 
+    template<int Dim, int Span>
+    CoefT operator[](Slice<Dim, Span> const & sl) const;
+
     CoefT operator[](int pt) const;
 
     typedef T                   ElemT;
@@ -115,14 +118,13 @@ public:
 };
 /// \endcond
 
-
-template<typename T, typename S, int Dim>
-T apply_subscript(S const & el, Point<Dim> const & pt) {
+template<typename T, typename S, typename Pt>
+T apply_subscript(S const & el, Pt const & pt) {
         return el[pt];
 }
 
-template<typename T, typename S>
-T apply_subscript(S const & el, Point<1> const & pt) {
+template<typename T, typename S, int Dim>
+T apply_subscript(S const & el, Slice<Dim, Dim - 1> const & pt) {
         return el[pt[0]];
 }
 
@@ -139,7 +141,7 @@ template<int Dim>
 typename Polynomial<T>::CoefT
 Polynomial<T>::operator[](Point< Dim/*Polynomial<T>::VAR_CNT*/ > const & pt) const {
     //assert(Dim == VAR_CNT);
-    if (pt[0] < 0 || data.size() <= pt[0])
+    if (pt[0] < (int)0 || (int)data.size() <= pt[0])
         return CoefT();
     else
         //return data[pt[0]][make_slice(pt)];
@@ -147,9 +149,20 @@ Polynomial<T>::operator[](Point< Dim/*Polynomial<T>::VAR_CNT*/ > const & pt) con
 }
 
 template<typename T>
+template<int Dim, int Span>
+typename Polynomial<T>::CoefT
+Polynomial<T>::operator[](Slice<Dim, Span> const & sl) const {
+    if (sl[0] < 0 || data.size() <= sl[0])
+        return CoefT();
+    else
+        return apply_subscript<Polynomial<T>::CoefT>(data[sl[0]], make_slice(sl));
+}
+
+
+template<typename T>
 typename Polynomial<T>::CoefT
 Polynomial<T>::operator[](int pt) const {
-    if (pt < 0 || data.size() <= pt)
+    if (pt < (int)0 || (int)data.size() <= pt)
         return CoefT();
     else
         return data[pt];
