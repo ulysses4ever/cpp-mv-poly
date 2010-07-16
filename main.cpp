@@ -24,6 +24,12 @@ using std::cout;
 using std::endl;
 using std::string;
 
+template<typename T>
+class Bar {
+public:
+    //static const int =
+};
+
 int main() {
     MVPolyType<2, NTL::GF2>::ResultT p;
     loadPolyFromString(p, "[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");

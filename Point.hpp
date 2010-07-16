@@ -158,9 +158,25 @@ void increase(Point<Dim> & pt) {
 }
 
 /**
- * Point slice.
+ * Point slice. It is kind of Decorator (cf. [GoF]) for point instance which
+ * shifts the index used in \c Point subscript operator on \c Offset
+ * postitions. It is used when subscript operation goes deeper in the nestedness
+ * level of or main recursive type \c MVPolyType (which is
+ * <tt>Polynomial<… Polynomial<T>… ></tt>).
+ *
+ * We probaly should use some polymorphism (either static or dynamic)
+ * to allow \c pt field contain either Point or Slice itself, but we decided to
+ * “optimise away” such possibility always keeping a Point instance — this is
+ * managed by \c make_slice utility which we consider a part of Slice implementation
+ * so this abstraction is not that leaky. As a proof of this we recall generic
+ * utility \c apply_subscript which polymorphically calls operator[] for
+ * either Point or Slice instance.
+ *
+ * @param Dim Initial dimension of the point beeing sliced.
+ * @param Offset Starting index in initial point to subscript from in
+ * the current slice.
  */
-template<int Dim, int Span>
+template<int Dim, int Offset>
 class Slice {
     Point<Dim> const & pt;
 
@@ -175,26 +191,22 @@ public:
 
     const_reference
     operator[](size_type n) const {
-        return pt[n + Span];
+        return pt[n + Offset];
     }
 };
 
+/// Slice of the point is “1-slice”. For 1-slice sl[i] ~ pt[i + 1].
 template<int Dim>
 Slice<Dim, 1> make_slice(Point<Dim> const & pt) {
     return Slice<Dim, 1>(pt);
 }
 
-template<int Dim, int Span>
-Slice<Dim, Span + 1> make_slice(Slice<Dim, Span> const & sl) {
-    return Slice<Dim, Span + 1>(sl.getImpl());
+/** Slice of the Slice<Dim, Offset> is Slice<Dim, Offset + 1>. It is convinient
+ * for us to slice by 1 position each time.
+ */
+template<int Dim, int Offset>
+Slice<Dim, Offset + 1> make_slice(Slice<Dim, Offset> const & sl) {
+    return Slice<Dim, Offset + 1>(sl.getImpl());
 }
-
-//template<int Dim>
-//Point<Dim - 1> make_slice(Point<Dim> const & pt) {
-//    Point<Dim - 1> result;
-//    for (int i = 0; i < Dim - 1; ++i)
-//        result[i] = pt[i+1];
-//    return result;
-//}
 
 #endif /* POINT_HPP_ */

@@ -83,18 +83,41 @@ public:
         typedef typename PolyCoeff<S>::Type Type;
     };
 
+    /**
+     * Multivariate polynomial coefficients type.
+     * For <tt>Polynomial<Polynomial<… Polynomial<T>… ></tt> it's \c T.
+     */
     typedef typename PolyCoeff<T>::Type CoefT;
 
+    /**
+     * Number of polynomial variables. Actually it's nestedness depth of type
+     * <tt>Polynomial<Polynomial<… Polynomial<T>… ></tt>.
+     */ // it probably should be initialized outside the class definition, but fail to...
     static const int VAR_CNT = 1 + VarCnt<T>::result;
 
-    template<int Dim>
-    CoefT operator[](Point<Dim> const & pt) const;
+    /**
+     * Subscript operator aimed for use with “plain” (one-variable) polynomials
+     * (i.e.\ Polynomial<T> where T is not of the form Polynomial<S>).
+     * @param idx index of (plain) polynomial coefficient to be returned.
+     * @return (plain) polynomial coefficient with index \c idx.
+     */
+    CoefT operator[](int idx) const;
 
-    template<int Dim, int Span>
-    CoefT operator[](Slice<Dim, Span> const & sl) const;
+    /**
+     * Subscript operator aimed for use with multivariate polynomials
+     * (i.e.\ Polynomial<T> where T is not of the form Polynomial<S>, S is possibly
+     * of the form Polynomial<U> and so on). Coefficients of mv-polynomial is
+     * numbered with points (Point<Dim>), and point dimension (Dim) should be
+     * equal to the number of polynomial variables.
+     * @param pt point-index (sometimes called multi-indexd) of polynomial
+     * coefficient to be returned.
+     * @return polynomial coefficient with point-index \c pt.
+     */
+    CoefT operator[](Point<VAR_CNT> const & pt) const;
 
-    CoefT operator[](int pt) const;
-
+    /** As polynomial is actually a special container type, it has distinguished
+     * type for it's elements.
+     */
     typedef T                   ElemT;
 
     typedef std::deque<ElemT>   StorageT;
@@ -104,8 +127,25 @@ public:
     StorageT const & getCoefs() const     { return data; }
 
 private:
+    /**
+     * Implementation detail: used in operator[](Point<VAR_CNT>) for going
+     * deeper in the polynomial nest. If client calls
+     * <tt>MVPolyType<n, T>::operator[Point<n> pt]</tt>,
+     * then for all k we will use
+     * <tt>MVPolyType<n - k, T>::operator[Slice<n, k>]</tt>,
+     * where <tt>Slice<n, k></tt> offers access to the part of pt, namely
+     * <tt>pt[k, k+1, ..., n-1]</tt>
+     * @param sl
+     * @return
+     */
+    template<int Offset>
+    CoefT operator[](Slice<VAR_CNT, Offset> const & sl) const;
+
     StorageT data;
 };
+
+//template<typename T>
+//const int Polynomial<T>::VAR_CNT = 1 + VarCnt<T>::result;
 
 /// \cond
 /*
@@ -118,40 +158,57 @@ public:
 };
 /// \endcond
 
+/** We need generic subscript utility as with Polynomial::operator[] we
+ * can't use template specialization (the rule for template mambers of
+ * template class: specialize member only for class specialization
+ * cf. [VJ, 12.3.3]).
+ *
+ * The point type here (Pt) is actually either Point or Slice, as opposed to
+ * Polynomial::operator[] we don't handle the variants separately because it's
+ * (some kind) hidden implementation detail — with Polynomial::operator[] we
+ * wanna be as clear as we can, so parameteres types are as strict as they
+ * could be.
+ *
+ * @param el the object to be subscripted
+ * @param pt generic subscription index. The function could be tuned for speical
+ * types of \c pt.
+ * @return result of suscript operator applied to \c el at \c pt.
+ */
 template<typename T, typename S, typename Pt>
 T apply_subscript(S const & el, Pt const & pt) {
         return el[pt];
 }
 
+/// When slice is maximal Slice<Dim, Dim - 1> stop slicing a point.
 template<typename T, typename S, int Dim>
 T apply_subscript(S const & el, Slice<Dim, Dim - 1> const & pt) {
         return el[pt[0]];
 }
 
-//template<typename T>
-//inline
-//Polynomial<T>::CoefT
-//apply_subscript(T const & el, Point<0> const & pt) {
-//    return el;
-//}
+/**
+ * Handling Slice<Dim, Dim>. Actually this type is illegal
+ * (in Slice<Dim, Offset> we should have Dim > Offset). If we get here, it means
+ * client used MVPolyType<1, T>::operator[Point<1>] instead of operator[int].
+ * But client is always right so we cope with this correctly.
+ */
+template<typename T, typename S, int Dim>
+T apply_subscript(S const & el, Slice<Dim, Dim> const & pt) {
+        return el;
+}
 
-//CoefT operator[](Point<VAR_CNT> const & pt) const;
 template<typename T>
-template<int Dim>
 typename Polynomial<T>::CoefT
-Polynomial<T>::operator[](Point< Dim/*Polynomial<T>::VAR_CNT*/ > const & pt) const {
-    //assert(Dim == VAR_CNT);
+Polynomial<T>::operator[](Point<VAR_CNT> const & pt) const {
     if (pt[0] < (int)0 || (int)data.size() <= pt[0])
         return CoefT();
     else
-        //return data[pt[0]][make_slice(pt)];
         return apply_subscript<Polynomial<T>::CoefT>(data[pt[0]], make_slice(pt));
 }
 
 template<typename T>
-template<int Dim, int Span>
+template<int Offset>
 typename Polynomial<T>::CoefT
-Polynomial<T>::operator[](Slice<Dim, Span> const & sl) const {
+Polynomial<T>::operator[](Slice<VAR_CNT, Offset> const & sl) const {
     if (sl[0] < 0 || data.size() <= sl[0])
         return CoefT();
     else
@@ -169,7 +226,7 @@ Polynomial<T>::operator[](int pt) const {
 }
 
 /** Neat template type for actually getting multivariate polynomials.
- * Delivers user from writing \c Polynomial<Polynomial< ... Polynomial<int>...>.
+ * Delivers user from writing \c Polynomial<Polynomial<… Polynomial<int>… >.
  @param VarCnt — polynomial variables count
  @param Coef — polynomial coefficient type */
 template<int VarCnt, typename Coef>
