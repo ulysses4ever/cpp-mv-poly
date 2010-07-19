@@ -22,7 +22,7 @@ class Point {
     ImplType data;
 
 public:
-    /// Creates point (0, 0, ..., 0)
+    /// Creates point (0, 0, ..., 0).
     Point() {
         data.assign(0);
     }
@@ -163,6 +163,12 @@ bool totalLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
                     rhs.rbegin(), rhs.rend());
 }
 
+template<int Dim>
+inline
+bool operator<(Point<Dim> const & lhs, Point<Dim> const & rhs) {
+    return totalLess(lhs, rhs);
+}
+
 /**
  * Reflexive version of \c totalLess.
  * @param[in] lhs Left-hand side argument of “less-or-equal”.
@@ -202,7 +208,7 @@ Point<Dim>& Point<Dim>::operator++() {
 }
 
 /**
- * Point's pre-increment following antilexicographic order.
+ * Point's post-increment following antilexicographic order.
  */
 template<int Dim>
 inline
@@ -212,6 +218,9 @@ Point<Dim> Point<Dim>::operator++(int) {
     return old;
 }
 
+/**
+ * Coordinate-wise point summation.
+ */
 template<int Dim>
 inline
 Point<Dim> operator+(Point<Dim> lhs, Point<Dim> const & rhs) {
@@ -219,6 +228,9 @@ Point<Dim> operator+(Point<Dim> lhs, Point<Dim> const & rhs) {
     return lhs += rhs;
 }
 
+/**
+ * Coordinate-wise point subtaraction.
+ */
 template<int Dim>
 inline
 Point<Dim> operator-(Point<Dim> lhs, Point<Dim> const & rhs) {
@@ -228,7 +240,7 @@ Point<Dim> operator-(Point<Dim> lhs, Point<Dim> const & rhs) {
 /**
  * Point slice. It is kind of Decorator (cf. [GoF]) for point instance which
  * shifts the index used in \c Point subscript operator on \c Offset
- * postitions. It is used when subscript operation goes deeper in the nestedness
+ * positions. It is used when subscript operation goes deeper in the nestedness
  * level of or main recursive type \c MVPolyType (which is
  * <tt>Polynomial<… Polynomial<T>… ></tt>).
  *

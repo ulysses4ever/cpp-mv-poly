@@ -249,6 +249,18 @@ Polynomial<T>::operator[](int pt) const {
         return data[pt];
 }
 
+/**
+ * Convolution-like operation for polynomials with immediate return of \c m\ -th
+ * compoment (in general the result of convolution of two sequences is a
+ * sequence also). We need a hint where to stop convoluting our two polynomial/
+ * sequences — \c degf plays this role.
+ * @param f One polynomial to convolute.
+ * @param u Second polynomial to convolute.
+ * @param degf The hint where to stop convolute.
+ * @param m The index of resulting polynomial/sequence that we — only
+ * virtually — get with our convolution operation.
+ * @return
+ */
 template<typename T>
 inline
 typename Polynomial<T>::CoefT

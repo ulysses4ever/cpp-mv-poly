@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <set>
 #include <string>
 #include <typeinfo>
 
@@ -23,19 +24,28 @@ using std::endl;
 using std::string;
 
 int main() {
-    MVPolyType<2, NTL::GF2>::ResultT f, u;
-    loadPolyFromString(u, "[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
-    loadPolyFromString(f, "[[1 1] [1]]");
-    Point<2> degf;
-    degf[0] = 0;
-    degf[1] = 1;
-    Point<2> m;
-    m[0] = 0;
-    m[1] = 2;
-    cout << conv(f, u, degf, m) << endl;
-    m[0] = 2;
-    m[1] = 1;
-    cout << conv(f, u, degf, m) << endl;
+//    std::set<Point<2> > s, sn;
+//    Point<2> pt;
+//    pt[0] = 0; pt[1] = 1;
+//    s.insert(pt);
+//    pt[0] = 2; pt[1] = 0;
+//    s.insert(pt);
+//    pt[0] = 1; pt[1] = 0;
+//    s.insert(pt);
+//    sn = getPartialMaximums(s);
+//    MVPolyType<2, NTL::GF2>::ResultT f, u;
+//    loadPolyFromString(u, "[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
+//    loadPolyFromString(f, "[[1 1] [1]]");
+//    Point<2> degf;
+//    degf[0] = 0;
+//    degf[1] = 1;
+//    Point<2> m;
+//    m[0] = 0;
+//    m[1] = 2;
+//    cout << conv(f, u, degf, m) << endl;
+//    m[0] = 2;
+//    m[1] = 1;
+//    cout << conv(f, u, degf, m) << endl;
 //    for ( ; totalLess(i, pt); increase(i)) {
 //        cout << p[i] << " ";
 //    }
