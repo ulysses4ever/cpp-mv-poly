@@ -86,6 +86,36 @@ public:
     const_reverse_iterator
     rend() const
     { return data.rend(); }
+
+    Point& operator+=(Point const & other) {
+        std::transform(this->begin(), this->end(),
+                other.begin(), this->begin(), std::plus<int>());
+        return *this;
+    }
+
+    Point& operator-=(Point const & other) {
+        std::transform(this->begin(), this->end(),
+                other.begin(), this->begin(), std::minus<int>());
+        return *this;
+    }
+
+    Point& operator++();
+
+    Point operator++(int);
+
+    /**
+     * Compaison for equality: two points are equal iff all corresponding coordinates
+     * are equal.
+     * @param lhs Left-hand side argument for testing on equality.
+     * @param rhs Right-hand side argument for testing on equality.
+     * @return True if all corresponding coordinates of \c lhs and \c rhs are equal,
+     * false otherwise.
+     */
+    friend
+    bool operator==(Point<Dim> const & lhs, Point<Dim> const & rhs) {
+        return lhs.data == rhs.data;
+    }
+
 };
 
 /**
@@ -122,7 +152,8 @@ bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
  * antilexicographic order.
  * @param[in] lhs Left-hand side argument of “less”.
  * @param[in] rhs Right-hand side argument of “less”.
- * @return Result of comparison two points by current monomial order.
+ * @return Result of comparison two points by current monomial order. True is
+ * \c lhs less then \c rhs, false otherwise.
  */
 template<int Dim>
 inline
@@ -133,28 +164,65 @@ bool totalLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
 }
 
 /**
- * In place point increasing following antilexicographic order.
- * @param[in,out] pt Point to be increased.
+ * Reflexive version of \c totalLess.
+ * @param[in] lhs Left-hand side argument of “less-or-equal”.
+ * @param[in] rhs Right-hand side argument of “less-or-equal”.
+ * @return Result of comparison two points by current monomial order. True is
+ * \c lhs less then or equal to \c rhs, false otherwise.
  */
 template<int Dim>
 inline
-void increase(Point<Dim> & pt) {
-    typename Point<Dim>::reverse_iterator rit = pt.rbegin();
+bool totalLessOrEqual(Point<Dim> const & lhs, Point<Dim> const & rhs) {
+    return totalLess(lhs, rhs) || (lhs == rhs);
+}
+
+/**
+ * Point's pre-increment following antilexicographic order.
+ */
+template<int Dim>
+inline
+Point<Dim>& Point<Dim>::operator++() {
+    typename Point<Dim>::reverse_iterator rit = this->rbegin();
     typename Point<Dim>::reverse_iterator rit_to_inc(rit++);
-    while (rit != pt.rend()) {
+    while (rit != this->rend()) {
         // loop invariant: rit is one step further then rit_to_inc
         if (*rit > 0) {
             --*rit;
             ++*rit_to_inc;
-            return;
+            return *this;
         }
         ++rit;
         ++rit_to_inc;
     }
     // rit == pt.rend()
     // pt = (0, 0, ..., 0, a) and result shoud be (a + 1, 0, ..., 0)
-    *rit_to_inc = *pt.rbegin() + 1;
-    *pt.rbegin() = 0;
+    *rit_to_inc = *(this->rbegin()) + 1;
+    *(this->rbegin()) = 0;
+    return *this;
+}
+
+/**
+ * Point's pre-increment following antilexicographic order.
+ */
+template<int Dim>
+inline
+Point<Dim> Point<Dim>::operator++(int) {
+    Point<Dim> old(*this);
+    ++*this;
+    return old;
+}
+
+template<int Dim>
+inline
+Point<Dim> operator+(Point<Dim> lhs, Point<Dim> const & rhs) {
+    // lhs: pass-by-copy optimization
+    return lhs += rhs;
+}
+
+template<int Dim>
+inline
+Point<Dim> operator-(Point<Dim> lhs, Point<Dim> const & rhs) {
+    return lhs -= rhs;
 }
 
 /**

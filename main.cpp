@@ -13,8 +13,6 @@
 #include <string>
 #include <typeinfo>
 
-//#include <boost/test/>
-
 #include <NTL/GF2.h>
 
 #include "mv_poly.hpp"
@@ -24,20 +22,23 @@ using std::cout;
 using std::endl;
 using std::string;
 
-template<typename T>
-class Bar {
-public:
-    //static const int =
-};
-
 int main() {
-    MVPolyType<2, NTL::GF2>::ResultT p;
-    loadPolyFromString(p, "[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
-    Point<2> i, pt;
-    pt[0] = 4; pt[1] = 1;
-    for ( ; totalLess(i, pt); increase(i)) {
-        cout << p[i] << " ";
-    }
+    MVPolyType<2, NTL::GF2>::ResultT f, u;
+    loadPolyFromString(u, "[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
+    loadPolyFromString(f, "[[1 1] [1]]");
+    Point<2> degf;
+    degf[0] = 0;
+    degf[1] = 1;
+    Point<2> m;
+    m[0] = 0;
+    m[1] = 2;
+    cout << conv(f, u, degf, m) << endl;
+    m[0] = 2;
+    m[1] = 1;
+    cout << conv(f, u, degf, m) << endl;
+//    for ( ; totalLess(i, pt); increase(i)) {
+//        cout << p[i] << " ";
+//    }
 //    typedef MVPolyType<1, int>::ResultT Poly1;
 //    Poly1 p1;
 //    loadPolyFromString(p1, "[1 2 3]");

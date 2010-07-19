@@ -25,6 +25,31 @@
 
 #include "Point.hpp"
 
+/// \cond
+template<typename T>
+class Polynomial;
+/// \endcond
+
+/** Neat template type for actually getting multivariate polynomials.
+ * Delivers user from writing \c Polynomial<Polynomial<… Polynomial<int>… >.
+ @param VarCnt — polynomial variables count
+ @param Coef — polynomial coefficient type */
+template<int VarCnt, typename Coef>
+class MVPolyType {
+public:
+    typedef Polynomial<typename MVPolyType<VarCnt - 1, Coef>::ResultT> ResultT;
+};
+
+/// \cond
+/* Specialization of MVPolyType
+ for stopping recursive instantiation */
+template<typename Coef>
+class MVPolyType<1, Coef> {
+public:
+    // multivariab te polynomial from 1 variable is just Polynomial
+    typedef Polynomial<Coef> ResultT;
+};
+/// \endcond
 
 /**
  * Variables counter for Polynomial class template.
@@ -159,8 +184,8 @@ public:
 /// \endcond
 
 /** We need generic subscript utility as with Polynomial::operator[] we
- * can't use template specialization (the rule for template mambers of
- * template class: specialize member only for class specialization
+ * can't use template specialization (the rule for template members of
+ * template class: specialize member only for enclosing class specialization
  * cf. [VJ, 12.3.3]).
  *
  * The point type here (Pt) is actually either Point or Slice, as opposed to
@@ -188,7 +213,7 @@ T apply_subscript(S const & el, Slice<Dim, Dim - 1> const & pt) {
 /**
  * Handling Slice<Dim, Dim>. Actually this type is illegal
  * (in Slice<Dim, Offset> we should have Dim > Offset). If we get here, it means
- * client used MVPolyType<1, T>::operator[Point<1>] instead of operator[int].
+ * client used MVPolyType<1, T>::operator[](Point<1>) instead of operator[](int).
  * But client is always right so we cope with this correctly.
  */
 template<typename T, typename S, int Dim>
@@ -215,7 +240,6 @@ Polynomial<T>::operator[](Slice<VAR_CNT, Offset> const & sl) const {
         return apply_subscript<Polynomial<T>::CoefT>(data[sl[0]], make_slice(sl));
 }
 
-
 template<typename T>
 typename Polynomial<T>::CoefT
 Polynomial<T>::operator[](int pt) const {
@@ -225,28 +249,23 @@ Polynomial<T>::operator[](int pt) const {
         return data[pt];
 }
 
-/** Neat template type for actually getting multivariate polynomials.
- * Delivers user from writing \c Polynomial<Polynomial<… Polynomial<int>… >.
- @param VarCnt — polynomial variables count
- @param Coef — polynomial coefficient type */
-template<int VarCnt, typename Coef>
-class MVPolyType {
-public:
-    typedef Polynomial<typename MVPolyType<VarCnt - 1, Coef>::ResultT> ResultT;
-};
+template<typename T>
+inline
+typename Polynomial<T>::CoefT
+conv(
+        Polynomial<T> const & f,
+        Polynomial<T> const & u,
+        Point<Polynomial<T>::VAR_CNT> const & degf,
+        Point<Polynomial<T>::VAR_CNT> const & m) {
+    typename Polynomial<T>::CoefT res;
+    Point<Polynomial<T>::VAR_CNT> i;
+    while(totalLessOrEqual(i, degf)) {
+        res += f[i] * u[i + m - degf];
+        ++i;
+    }
+    return res;
+}
 
-/// \cond
-/* Specialization of MVPolyType
- for stopping recursive instantiation */
-template<typename Coef>
-class MVPolyType<1, Coef> {
-public:
-    // multivariate polynomial from 1 variable is just Polynomial
-    typedef Polynomial<Coef> ResultT;
-};
-/// \endcond
-
-using std::istream;
 /**
  * Input polynomial from stream;
  * @param[in,out] is Stream which contains data for creating polynomial.
@@ -254,7 +273,7 @@ using std::istream;
  * @return \c is (conventionally).
  */
 template <typename T>
-istream& operator>>(istream& is, Polynomial<T> & p) {
+std::istream& operator>>(std::istream& is, Polynomial<T> & p) {
     char c = 0;
     is >> c;
     if ('[' != c) {
@@ -287,8 +306,6 @@ void loadPolyFromString( Polynomial<T> & p, std::string const & s ) {
     is >> p;
 }
 
-using std::ostream;
-
 /**
  * Generic output for mv-polynomials.
  * @param[out] os Target output stream.
@@ -297,7 +314,7 @@ using std::ostream;
  * outputed to \c os (conventionally).
  */
 template <typename T>
-ostream& operator<<(ostream& os, Polynomial<T> const & p) {
+std::ostream& operator<<(std::ostream& os, Polynomial<T> const & p) {
     if (p.getCoefs().empty()) {
         os << "[]";
         return os;
