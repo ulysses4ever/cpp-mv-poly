@@ -154,6 +154,42 @@ bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
 }
 
 /**
+ * Checks if given point \pt  is by-coordinate less then any point in
+ * collection \c c.
+ * @param[in] pt Point to check for by-coordinate less.
+ * @param[in] c Container of points to be check against.
+ * @return True is there exists a point pt' in \c c such that
+ * byCoordinateLess(pt, pt'), false otherwise.
+ */
+template<int Dim, typename PtCont>
+inline
+bool byCoordinateLessThenAny(Point<Dim> const & pt, PtCont const & c) {
+    using std::tr1::bind;
+    using std::tr1::placeholders::_1;
+    using std::tr1::cref;
+    return c.end() != std::find_if(c.begin(), c.end(),
+            bind(&byCoordinateLess<Dim>, cref(pt), _1));
+}
+
+/**
+ * Checks if given point \pt  is by-coordinate greater then any point in
+ * collection \c c.
+ * @param[in] pt Point to check for by-coordinate greater.
+ * @param[in] c Container of points to be check against.
+ * @return True is there exists a point pt' in \c c such that
+ * byCoordinateLess(pt, pt'), false otherwise.
+ */
+template<int Dim, typename PtCont>
+inline
+bool byCoordinateGreaterThenAny(Point<Dim> const & pt, PtCont const & c) {
+    using std::tr1::bind;
+    using std::tr1::placeholders::_1;
+    using std::tr1::cref;
+    return c.end() != std::find_if(c.begin(), c.end(),
+            bind(&byCoordinateLess<Dim>, _1, cref(pt)));
+}
+
+/**
  * This total oreder predicate implements monomial order. Namely graded
  * antilexicographic order.
  * @param[in] lhs Left-hand side argument of “less”.
@@ -246,12 +282,11 @@ Point<Dim> operator-(Point<Dim> lhs, Point<Dim> const & rhs) {
 /**
  * Gets all partial maximums from collection of \c Point (\c points) with
  * respect to by-coordinate partial order (cf. \c byCoordinateLess).
- * @param points Collection of points to be filtered to get maximums.
+ * @param points Collection of points to be looked through for the maximums.
  * @return Maximum points with respect to by-coordinate partial order
  * (cf. \c byCoordinateLess) from the \c points.
  */
 template<int Dim, template<typename T, typename S = std::allocator<T> > class Cont>
-//template<int Dim, typename PtCont> — we want to now
 Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim> > const & points) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1; // usually we use “using” directive:
@@ -262,8 +297,7 @@ Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim> > const & points) {
     Cont<Point<Dim> > result;
     BOOST_FOREACH(Point<Dim> const & pt, points) {
         // if there is a point in result which dominates pt, then throw pt away
-        if ( result.end() != find_if(result.begin(), result.end(),
-                bind(&byCoordinateLess<Dim>, cref(pt), _1)) )
+        if (byCoordinateLessThenAny(pt, result))
             continue;
         // else we add pt to the result but first delete all points
         // in result dominated by pt
@@ -276,6 +310,65 @@ Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim> > const & points) {
     return result;
 }
 
+/**
+ * Complimentary to \c getPartialMaximums.
+ * @param points Collection of points to be looked through for the maximums.
+ * @return Maximum points with respect to by-coordinate partial order
+ * (cf. \c byCoordinateLess) from the \c points.
+ */
+template<int Dim, template<typename T, typename S = std::allocator<T> > class Cont>
+Cont<Point<Dim> > getPartialMinimums(Cont<Point<Dim> > const & points) {
+    // TODO: probably we should refactor out this function together with
+    // getPartialMaximums to get one generic function
+    using std::tr1::bind;
+    using std::tr1::placeholders::_1;
+    using std::tr1::cref;
+    using std::find_if;
+    Cont<Point<Dim> > result;
+    BOOST_FOREACH(Point<Dim> const & pt, points) {
+        // if there is a point in result which dominates pt, then throw pt away
+        if (byCoordinateGreaterThenAny(pt, result))
+            continue;
+        // else we add pt to the result but first delete all points
+        // in result dominated by pt
+        result.erase(
+                remove_if(result.begin(), result.end(),
+                        bind(&byCoordinateLess<Dim>, _1, cref(pt))),
+                result.end());
+        result.push_back(pt);
+    }
+    return result;
+}
+
+template<int Dim, template<typename T, typename S = std::allocator<T> > class Cont>
+Cont<Point<Dim> > getConjugatePointCollection(Cont<Point<Dim> > const & points) {
+    // construct some finite approximation set of Sigma-set, which contains conjugate
+    // point set to be found; then we use exhaustive search in this finite set for
+    // finding extremums (minimums in this case) as usual (see getPartialMaximums);
+    // the approximation set defined as follows (and this definition is a
+    // subject of probable future optimization, specification
+    // and even correction ;)): it is all points totally
+    // less (w.r.t. monomial order) then the point which has a weight equal to
+    // the maximum weight of points in given collection plus 2
+    // but the (totally) least from all such points
+    // TODO: proof correctness of the algorithm
+    using std::tr1::bind;
+    using std::tr1::function;
+    using std::tr1::placeholders::_1;
+    using std::tr1::placeholders::_2;
+    function<int (Point<Dim>)> pointWeight = bind(&Point<Dim>::weight, _1);
+    int max_weight = std::max_element(points.begin(), points.end(),
+            bind(std::less<int>(),
+                    bind(pointWeight, _1), bind(pointWeight, _2)))->weight();
+    Point<Dim> upperPoint;
+    upperPoint[0] = max_weight + 2;
+    Cont< Point<Dim> > approxSigmaSet;
+    for (Point<Dim> i; i < upperPoint; ++i) {
+        if (! byCoordinateLessThenAny(i, points))
+            approxSigmaSet.push_back(i);
+    }
+    return getPartialMinimums(approxSigmaSet);
+}
 /**
  * Point slice. It is kind of Decorator (cf. [GoF]) for point instance which
  * shifts the index used in \c Point subscript operator on \c Offset
