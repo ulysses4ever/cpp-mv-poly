@@ -9,6 +9,7 @@
 #include <deque>
 #include <iostream>
 #include <iterator>
+#include <list>
 #include <sstream>
 #include <set>
 #include <string>
@@ -22,17 +23,32 @@
 using std::cout;
 using std::endl;
 using std::string;
+using std::copy;
+using std::ostream_iterator;
+
+template<int Dim>
+void f(Point<Dim> const & pt1, Point<Dim> const & pt2) {
+    using std::tr1::bind;
+    using namespace std::tr1::placeholders;
+    using std::tr1::cref;
+    cout << bind(&byCoordinateLess<2>, cref(pt1), _1)(pt2);
+}
 
 int main() {
-//    std::set<Point<2> > s, sn;
-//    Point<2> pt;
-//    pt[0] = 0; pt[1] = 1;
-//    s.insert(pt);
-//    pt[0] = 2; pt[1] = 0;
-//    s.insert(pt);
-//    pt[0] = 1; pt[1] = 0;
-//    s.insert(pt);
-//    sn = getPartialMaximums(s);
+    Point<2> pt;
+    std::list<Point<2> > s, sn;
+    pt[0] = 0; pt[1] = 1;
+    s.push_back(pt);
+    pt[0] = 2; pt[1] = 0;
+    s.push_back(pt);
+    pt[0] = 1; pt[1] = 0;
+    s.push_back(pt);
+    pt[0] = 1; pt[1] = 1;
+    s.push_back(pt);
+    sn = getPartialMaximums(s);
+
+    copy(sn.begin(), sn.end(), ostream_iterator<Point<2> >(cout, "\n"));
+
 //    MVPolyType<2, NTL::GF2>::ResultT f, u;
 //    loadPolyFromString(u, "[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
 //    loadPolyFromString(f, "[[1 1] [1]]");

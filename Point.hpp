@@ -9,7 +9,13 @@
 #ifndef POINT_HPP_
 #define POINT_HPP_
 
+#include <memory>
+
 #include <tr1/array>
+#include <tr1/functional>
+
+#include <boost/foreach.hpp>
+
 
 /**
  * Point in N-dimensional integer lattice.
@@ -235,6 +241,39 @@ template<int Dim>
 inline
 Point<Dim> operator-(Point<Dim> lhs, Point<Dim> const & rhs) {
     return lhs -= rhs;
+}
+
+/**
+ * Gets all partial maximums from collection of \c Point (\c points) with
+ * respect to by-coordinate partial order (cf. \c byCoordinateLess).
+ * @param points Collection of points to be filtered to get maximums.
+ * @return Maximum points with respect to by-coordinate partial order
+ * (cf. \c byCoordinateLess) from the \c points.
+ */
+template<int Dim, template<typename T, typename S = std::allocator<T> > class Cont>
+//template<int Dim, typename PtCont> — we want to now
+Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim> > const & points) {
+    using std::tr1::bind;
+    using std::tr1::placeholders::_1; // usually we use “using” directive:
+    // using namespace std::tr1::placeholders; — but here it yelds some ambiguity
+    // while resolving _1 symbol, so we use declaration. Sad but true...
+    using std::tr1::cref;
+    using std::find_if;
+    Cont<Point<Dim> > result;
+    BOOST_FOREACH(Point<Dim> const & pt, points) {
+        // if there is a point in result which dominates pt, then throw pt away
+        if ( result.end() != find_if(result.begin(), result.end(),
+                bind(&byCoordinateLess<Dim>, cref(pt), _1)) )
+            continue;
+        // else we add pt to the result but first delete all points
+        // in result dominated by pt
+        result.erase(
+                remove_if(result.begin(), result.end(),
+                        bind(&byCoordinateLess<Dim>, _1, cref(pt))),
+                result.end());
+        result.push_back(pt);
+    }
+    return result;
 }
 
 /**
