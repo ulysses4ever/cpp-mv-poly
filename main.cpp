@@ -35,22 +35,30 @@ void f(Point<Dim> const & pt1, Point<Dim> const & pt2) {
 }
 
 int main() {
+    MVPolyType<2, int>::ResultT p("[[1 0 1] [1 1]]");
     Point<2> pt;
-    std::list<Point<2> > s, sn, sig;
     pt[0] = 0; pt[1] = 1;
-    s.push_back(pt);
-    pt[0] = 2; pt[1] = 0;
-    s.push_back(pt);
+//    p <<= pt;
+    cout << (p << pt) << endl;
     pt[0] = 1; pt[1] = 0;
-    s.push_back(pt);
-    sn = getPartialMaximums(s);
+    cout << (p << pt) << endl;
 
-    sig = getConjugatePointCollection(sn);
+//    Point<2> pt;
+//    std::list<Point<2> > s, sn, sig;
+//    pt[0] = 0; pt[1] = 1;
+//    s.push_back(pt);
+//    pt[0] = 2; pt[1] = 0;
+//    s.push_back(pt);
+//    pt[0] = 1; pt[1] = 0;
+//    s.push_back(pt);
+//    sn = getPartialMaximums(s);
+//
+//    sig = getConjugatePointCollection(sn);
     //copy(sn.begin(), sn.end(), ostream_iterator<Point<2> >(cout, "\n"));
 
     //std::copy(sn.begin(), sn.end(), ostream_iterator<Point<2> >(cout, "\n"));
     //std::cout << std::endl;
-    std::copy(sig.begin(), sig.end(), ostream_iterator<Point<2> >(cout, "\n"));
+//    std::copy(sig.begin(), sig.end(), ostream_iterator<Point<2> >(cout, "\n"));
 
 //    MVPolyType<2, NTL::GF2>::ResultT f, u;
 //    loadPolyFromString(u, "[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");

@@ -23,6 +23,8 @@
 #include <string>
 #include <typeinfo>
 
+#include <tr1/functional>
+
 #include "Point.hpp"
 
 /// \cond
@@ -87,9 +89,10 @@ public:
 //    friend
 //    std::ostream& operator<<(std::ostream& os, Polynomial & p);
 
-    Polynomial() {}
+    Polynomial() : data(1) /* no-argument constructor
+                                    for data element means 0 */ {}
 
-    Polynomial(std::string const & s) {
+    explicit Polynomial(std::string const & s) {
         loadPolyFromString(*this, s );
     }
 
@@ -140,6 +143,26 @@ public:
      */
     CoefT operator[](Point<VAR_CNT> const & pt) const;
 
+    /**
+     * Multiply polynomial on a scalar (Assignment version.)
+     * @param c Scalar to multiply on.
+     * @return This polynomial multiplyed on \c c.
+     */
+    Polynomial operator*=(CoefT const & c) {
+        //using std::tr1::bind;
+        //using std::tr1::placeholders::_1;
+        //std::for_each(data.begin(), data.end(), // binding overloaded functions
+                //bind(operator*=, _1, c)); // from different scopes is really messy
+        for (typename StorageT::iterator it = data.begin(); it != data.end(); ++it) {
+            (*it) *= c;
+        }
+        return *this;
+    }
+
+    Polynomial operator<<=(Point<VAR_CNT> const & monomial);
+
+    Polynomial operator<<=(int monomial);
+
     /** As polynomial is actually a special container type, it has distinguished
      * type for it's elements.
      */
@@ -165,6 +188,9 @@ private:
      */
     template<int Offset>
     CoefT operator[](Slice<VAR_CNT, Offset> const & sl) const;
+
+    template<int Offset>
+    Polynomial operator<<=(Slice<VAR_CNT, Offset> const & monomial);
 
     StorageT data;
 };
@@ -200,13 +226,13 @@ public:
  * @return result of suscript operator applied to \c el at \c pt.
  */
 template<typename T, typename S, typename Pt>
-T apply_subscript(S const & el, Pt const & pt) {
+T applySubscript(S const & el, Pt const & pt) {
         return el[pt];
 }
 
 /// When slice is maximal Slice<Dim, Dim - 1> stop slicing a point.
 template<typename T, typename S, int Dim>
-T apply_subscript(S const & el, Slice<Dim, Dim - 1> const & pt) {
+T applySubscript(S const & el, Slice<Dim, Dim - 1> const & pt) {
         return el[pt[0]];
 }
 
@@ -217,7 +243,7 @@ T apply_subscript(S const & el, Slice<Dim, Dim - 1> const & pt) {
  * But client is always right so we cope with this correctly.
  */
 template<typename T, typename S, int Dim>
-T apply_subscript(S const & el, Slice<Dim, Dim> const & pt) {
+T applySubscript(S const & el, Slice<Dim, Dim> const & pt) {
         return el;
 }
 
@@ -227,7 +253,7 @@ Polynomial<T>::operator[](Point<VAR_CNT> const & pt) const {
     if (pt[0] < (int)0 || (int)data.size() <= pt[0])
         return CoefT();
     else
-        return apply_subscript<Polynomial<T>::CoefT>(data[pt[0]], make_slice(pt));
+        return applySubscript<Polynomial<T>::CoefT>(data[pt[0]], make_slice(pt));
 }
 
 template<typename T>
@@ -237,7 +263,7 @@ Polynomial<T>::operator[](Slice<VAR_CNT, Offset> const & sl) const {
     if (sl[0] < 0 || data.size() <= sl[0])
         return CoefT();
     else
-        return apply_subscript<Polynomial<T>::CoefT>(data[sl[0]], make_slice(sl));
+        return applySubscript<Polynomial<T>::CoefT>(data[sl[0]], make_slice(sl));
 }
 
 template<typename T>
@@ -337,6 +363,90 @@ std::ostream& operator<<(std::ostream& os, Polynomial<T> const & p) {
     os << *(--(p.getCoefs().end()));
     os << ']';
     return os;
+}
+
+template<typename T>
+inline
+Polynomial<T> operator*(typename Polynomial<T>::CoefT const & c, Polynomial<T> p) {
+    // p — possible pass-by-copy optimization
+    return p *= c;
+}
+
+template<typename T>
+inline
+Polynomial<T> operator*(Polynomial<T> p, typename Polynomial<T>::CoefT const & c) {
+    return p *= c;
+}
+
+template<typename T, typename Pt>
+inline
+void applyMonomialMultiplication(T & elem, Pt const & monomial) {
+    elem <<= monomial;
+}
+
+template<typename T, int Dim>
+inline
+void applyMonomialMultiplication(
+        T & elem,
+        Slice<Dim, Dim - 1> const & monomial) {
+    elem <<= monomial[0];
+}
+
+template<typename T, int Dim>
+inline
+void applyMonomialMultiplication(
+        T & elem,
+        Slice<Dim, Dim> const & monomial) {
+    return;
+}
+
+template<typename T>
+inline
+Polynomial<T> Polynomial<T>::operator<<=(Point<VAR_CNT> const & monomial) {
+//    using std::tr1::bind;
+//    using std::tr1::placeholders::_1;
+//    std::for_each(data.begin(), data.end(), // niasilil
+//            bind(applyMonomialMultiplication<ElemT, Slice<VAR_CNT, 1> >,
+//                    _1, make_slice(monomial))); // TODO: add cref
+    for (typename StorageT::iterator it = data.begin(); it != data.end(); ++it)
+        applyMonomialMultiplication(*it, make_slice(monomial));
+    std::fill_n(std::front_inserter(data), monomial[0], ElemT());
+    return *this;
+}
+
+template<typename T>
+template<int Offset>
+inline
+Polynomial<T> Polynomial<T>::operator<<=(Slice<VAR_CNT, Offset> const & monomial) {
+    using std::tr1::bind;
+    using std::tr1::placeholders::_1;
+    std::for_each(data.begin(), data.end(),
+            bind(applyMonomialMultiplication<ElemT, Slice<VAR_CNT, Offset-1> >,
+                    _1, make_slice(monomial)));
+    std::fill_n(std::front_inserter(data), monomial[0], ElemT());
+    return *this;
+}
+
+template<typename T>
+inline
+Polynomial<T> Polynomial<T>::operator<<=(int monomial) {
+    std::fill_n(std::front_inserter(data), monomial, ElemT());
+    return *this;
+}
+
+
+template<typename T>
+inline
+Polynomial<T> operator<<(
+        Polynomial<T> p,
+        Point<Polynomial<T>::VAR_CNT> const & monomial) {
+    return p <<= monomial;
+}
+
+template<typename T>
+inline
+Polynomial<T> operator<<(Polynomial<T> p, int monomial) {
+    return p <<= monomial;
 }
 
 #endif /* MV_POLY_HPP_ */
