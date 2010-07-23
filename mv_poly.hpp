@@ -144,7 +144,7 @@ public:
     CoefT operator[](Point<VAR_CNT> const & pt) const;
 
     /**
-     * Multiply polynomial on a scalar (Assignment version.)
+     * Multiply polynomial on a scalar (assignment version).
      * @param c Scalar to multiply on.
      * @return This polynomial multiplyed on \c c.
      */
@@ -159,9 +159,24 @@ public:
         return *this;
     }
 
-    Polynomial operator<<=(Point<VAR_CNT> const & monomial);
+    /**
+     * Multiply polynomial on a monomial represented by its degree (assignment version)
+     * aimed for use with multivariate polynomials. If the polynomial has
+     * VAR_CNT variables <tt>x = x_1 x_2 … x_{VAR_CNT}</tt>, then
+     * <tt>Point<VAR_CNT> m</tt> represents monomial
+     * <tt>x^m = x_1^{m_1} x_2^{m_2} … x_{VAR_CNT}^{m_{VAR_CNT}}</tt>
+     * @param c Monomial x^{\c m} to multiply on.
+     * @return This polynomial multiplyed on \c x^{\c m}.
+     */
+    Polynomial operator<<=(Point<VAR_CNT> const & m);
 
-    Polynomial operator<<=(int monomial);
+    /**
+     * Multiply polynomial on a monomial represented by its degree (assignment version)
+     * aimed for use with “plain” (one-variable) polynomials.
+     * @param m  x^{\c m} to multiply on.
+     * @return This polynomial multiplyed on \c x^{\c m}.
+     */
+    Polynomial operator<<=(int m);
 
     /** As polynomial is actually a special container type, it has distinguished
      * type for it's elements.
@@ -189,8 +204,16 @@ private:
     template<int Offset>
     CoefT operator[](Slice<VAR_CNT, Offset> const & sl) const;
 
+    /**
+     * Implementation detail: used in operator<<=(Point<VAR_CNT>) for going
+     * deeper in the polynomial nest.
+     * @param m Slice of the monomial got in initial client call for
+     * <tt>operator<<=(Point<VAR_CNT>)</tt>.
+     * @return This polynomial with one more dimension multiplied on the next
+     * initial point component pointed to by the current slice.
+     */
     template<int Offset>
-    Polynomial operator<<=(Slice<VAR_CNT, Offset> const & monomial);
+    Polynomial operator<<=(Slice<VAR_CNT, Offset> const & m);
 
     StorageT data;
 };
@@ -365,6 +388,12 @@ std::ostream& operator<<(std::ostream& os, Polynomial<T> const & p) {
     return os;
 }
 
+/**
+ * Multiply polynomial on a scalar.
+ * @param c Scalar to multiply on.
+ * @param p Polynomial to be multiplied.
+ * @return This polynomial multiplyed on \c c.
+ */
 template<typename T>
 inline
 Polynomial<T> operator*(typename Polynomial<T>::CoefT const & c, Polynomial<T> p) {
@@ -372,12 +401,25 @@ Polynomial<T> operator*(typename Polynomial<T>::CoefT const & c, Polynomial<T> p
     return p *= c;
 }
 
+/**
+ * Multiply polynomial on a scalar.
+ * @param p Polynomial to be multiplied.
+ * @param c Scalar to multiply on.
+ * @return This polynomial multiplyed on \c c.
+ */
 template<typename T>
 inline
 Polynomial<T> operator*(Polynomial<T> p, typename Polynomial<T>::CoefT const & c) {
     return p *= c;
 }
 
+/**
+ * The purpose of the function is essentially the same as with applySubscript:
+ * to pull structure recursion on <tt>Polynomial<… Polynomial<T>… ></tt> type
+ * deeper, in this case — applying operator<<= on the way.
+ * @param elem
+ * @param monomial
+ */
 template<typename T, typename Pt>
 inline
 void applyMonomialMultiplication(T & elem, Pt const & monomial) {
@@ -435,18 +477,36 @@ Polynomial<T> Polynomial<T>::operator<<=(int monomial) {
 }
 
 
+/**
+ * Multiply polynomial on a monomial represented by its degree
+ * aimed for use with multivariate polynomials. If the polynomial has
+ * VAR_CNT variables <tt>x = x_1 x_2 … x_{VAR_CNT}</tt>, then
+ * <tt>Point<VAR_CNT> m</tt> represents monomial
+ * <tt>x^m = x_1^{m_1} x_2^{m_2} … x_{VAR_CNT}^{m_{VAR_CNT}}</tt>
+ * @param p Polynomial to be multiplied.
+ * @param c Monomial x^{\c m} to multiply on.
+ * @return This polynomial multiplyed on \c x^{\c m}.
+ */
 template<typename T>
 inline
 Polynomial<T> operator<<(
         Polynomial<T> p,
-        Point<Polynomial<T>::VAR_CNT> const & monomial) {
-    return p <<= monomial;
+        Point<Polynomial<T>::VAR_CNT> const & m) {
+    return p <<= m;
 }
+
+/**
+ * Multiply polynomial on a monomial represented by its degree
+ * aimed for use with “plain” (one-variable) polynomials.
+ * @param p Polynomial to be multiplied.
+ * @param m  x^{\c m} to multiply on.
+ * @return This polynomial multiplyed on \c x^{\c m}.
+ */
 
 template<typename T>
 inline
-Polynomial<T> operator<<(Polynomial<T> p, int monomial) {
-    return p <<= monomial;
+Polynomial<T> operator<<(Polynomial<T> p, int m) {
+    return p <<= m;
 }
 
 #endif /* MV_POLY_HPP_ */
