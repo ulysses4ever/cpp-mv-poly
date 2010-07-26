@@ -35,13 +35,22 @@ void f(Point<Dim> const & pt1, Point<Dim> const & pt2) {
 }
 
 int main() {
-    MVPolyType<2, int>::ResultT p("[[1 0 1] [1 1]]");
-    Point<2> pt;
-    pt[0] = 0; pt[1] = 1;
-//    p <<= pt;
-    cout << (p << pt) << endl;
-    pt[0] = 1; pt[1] = 0;
-    cout << (p << pt) << endl;
+    MVPolyType<2, int>::ResultT p("[[1 0 1] [1 1]]"), q(p);
+    q += p;
+    p *= 2;
+    cout << p << endl;
+    cout << q << endl;
+    cout << (p == q) << endl;
+    cout << p << endl;
+    cout << q << endl;
+
+
+//    MVPolyType<2, int>::ResultT p("[[1 0 1] [1 1]]");
+//    Point<2> pt;
+//    pt[0] = 0; pt[1] = 1;
+//    cout << (p << pt) << endl;
+//    pt[0] = 1; pt[1] = 0;
+//    cout << (p << pt) << endl;
 
 //    Point<2> pt;
 //    std::list<Point<2> > s, sn, sig;

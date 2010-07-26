@@ -178,6 +178,26 @@ public:
      */
     Polynomial operator<<=(int m);
 
+    /**
+     * Polynomial addition (assignment version).
+     * @param p[in] Polynomial to be added to this.
+     * @return Thos polynomial after addition \c p.
+     */
+    Polynomial operator+=(Polynomial const & p);
+
+    /**
+     * Polynomial comparison for equality after normalization.
+     * @param lhs Left-hand side operand for comparison
+     * @param rhs Right-hand side operand for comparison
+     * @return True iff all coefficients of both polynomials are equal, false
+     * otherwise. If high coefficients of one polynomial are zero, they considered
+     * equal to absent high coefficients of other polynomial.
+     */
+    template<typename S>
+    friend
+    inline
+    bool operator==(Polynomial<S> const & lhs, Polynomial<S> const & rhs);
+
     /** As polynomial is actually a special container type, it has distinguished
      * type for it's elements.
      */
@@ -215,11 +235,34 @@ private:
     template<int Offset>
     Polynomial operator<<=(Slice<VAR_CNT, Offset> const & m);
 
+    /**
+     * Delete trailing zeros in coefficient collection \c data.
+     */
+    void normalization() {
+        if (data.size() < 2)
+            return; // we will not delete single zero
+        ElemT tempDefElem;
+        typename StorageT::iterator it = --data.end(); // it is still valid
+        do {
+            if (*it == tempDefElem)
+                --it;
+            else
+                break;
+        } while (it != data.begin());
+            data.erase(it, data.end());
+    }
+
     StorageT data;
 };
 
-//template<typename T>
-//const int Polynomial<T>::VAR_CNT = 1 + VarCnt<T>::result;
+template<typename T>
+inline
+bool operator==(Polynomial<T> const & lhs, Polynomial<T> const & rhs) {
+       const_cast<Polynomial<T> &>(lhs).normalization();
+       const_cast<Polynomial<T> &>(rhs).normalization();
+       // yep, I know, that every time I use const_cast God kills a kitten
+       return lhs.data == rhs.data;
+}
 
 /// \cond
 /*
@@ -328,7 +371,7 @@ conv(
 }
 
 /**
- * Input polynomial from stream;
+ * Input polynomial from stream, format: [[a b c][e f]].
  * @param[in,out] is Stream which contains data for creating polynomial.
  * @param[out] p Polynomial to store.
  * @return \c is (conventionally).
@@ -368,7 +411,7 @@ void loadPolyFromString( Polynomial<T> & p, std::string const & s ) {
 }
 
 /**
- * Generic output for mv-polynomials.
+ * Generic output for mv-polynomials, format: [[a b c][e f]].
  * @param[out] os Target output stream.
  * @param[in] p Polynomial to be outputed in \c os.
  * @return Output stream \c os after polynomial \c p have been
@@ -507,6 +550,40 @@ template<typename T>
 inline
 Polynomial<T> operator<<(Polynomial<T> p, int m) {
     return p <<= m;
+}
+
+template<typename T>
+Polynomial<T> Polynomial<T>::operator+=(Polynomial<T> const & p) {
+    int degDiff = (this->data).size() - p.data.size();
+    if (degDiff < 0) { // if p has greater (“one-dimensional”) degree then
+        // first: copy tail of p to this
+        typename StorageT::const_iterator commonPartDelimeter(p.data.begin());
+        std::advance(commonPartDelimeter, data.size());
+        std::copy(commonPartDelimeter, p.data.end(), std::back_inserter(data));
+        // second: add the rest of p to this
+        typename StorageT::iterator itThis = data.begin();
+        for (
+                typename StorageT::const_iterator itP = p.data.begin();
+                itP != commonPartDelimeter;
+                ++itThis, ++itP) {
+            *itThis += *itP;
+        }
+    } else { // if this polynomial has greater degree then
+        typename StorageT::iterator itThis = data.begin();
+        for (
+                typename StorageT::const_iterator itP = p.data.begin();
+                itP != p.data.end();
+                ++itThis, ++itP) {
+            *itThis += *itP;
+        }
+    }
+    return *this;
+}
+
+template<typename T>
+inline
+Polynomial<T> operator+(Polynomial<T> lhs, Polynomial<T> const & rhs) {
+    return lhs += rhs;
 }
 
 #endif /* MV_POLY_HPP_ */
