@@ -1,4 +1,4 @@
-/** @file
+/** @file mv_poly.hpp
  *
  * Implementation of multivariate polynomials and accompanying routines.
  * The main idea of current implementation of multivariate polynomials
@@ -249,7 +249,9 @@ private:
             else
                 break;
         } while (it != data.begin());
-            data.erase(it, data.end());
+        if (it == data.begin()) // we'll not delete all the elements
+            ++it;
+        data.erase(it, data.end());
     }
 
     StorageT data;
@@ -429,6 +431,13 @@ std::ostream& operator<<(std::ostream& os, Polynomial<T> const & p) {
     os << *(--(p.getCoefs().end()));
     os << ']';
     return os;
+}
+
+template<typename T>
+std::string toString(Polynomial<T> const & p) {
+    std::ostringstream os;
+    os << p;
+    return os.str();
 }
 
 /**
