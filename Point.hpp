@@ -1,4 +1,4 @@
-/** @file
+/** @file Point.hpp
  *
  * Describes Point class template with accompanying routines.
  *
@@ -155,20 +155,37 @@ bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
 
 /**
  * Checks if given point \pt  is by-coordinate less then any point in
+ * range given by iterators \c beg and \c end.
+ * @param[in] pt Point to check for by-coordinate less.
+ * @param[in] beg Iterator that points to the begining (inclusively) of the
+ * point sequence to be check against.
+ * @param[in] end Iterator that points to the end (exclusively) of the
+ * point sequence to be check against.
+ * @return True if there exists a point pt' in [*beg, *end) such that
+ * byCoordinateLess(pt, pt'), false otherwise.
+ */
+template<int Dim, typename It>
+inline
+bool byCoordinateLessThenAny(Point<Dim> const & pt, It beg, It end) {
+    using std::tr1::bind;
+    using std::tr1::placeholders::_1;
+    using std::tr1::cref;
+    return end != std::find_if(beg, end,
+            std::tr1::bind(&byCoordinateLess<Dim>, cref(pt), _1));
+}
+
+/**
+ * Checks if given point \pt  is by-coordinate less then any point in
  * collection \c c.
  * @param[in] pt Point to check for by-coordinate less.
  * @param[in] c Container of points to be check against.
- * @return True is there exists a point pt' in \c c such that
+ * @return True if there exists a point pt' in \c c such that
  * byCoordinateLess(pt, pt'), false otherwise.
  */
 template<int Dim, typename PtCont>
 inline
 bool byCoordinateLessThenAny(Point<Dim> const & pt, PtCont const & c) {
-    using std::tr1::bind;
-    using std::tr1::placeholders::_1;
-    using std::tr1::cref;
-    return c.end() != std::find_if(c.begin(), c.end(),
-            bind(&byCoordinateLess<Dim>, cref(pt), _1));
+    return byCoordinateLessThenAny(pt, c.begin(), c.end());
 }
 
 /**
@@ -358,8 +375,9 @@ Cont<Point<Dim> > getConjugatePointCollection(Cont<Point<Dim> > const & points) 
     using std::tr1::placeholders::_2;
     function<int (Point<Dim>)> pointWeight = bind(&Point<Dim>::weight, _1);
     int max_weight = std::max_element(points.begin(), points.end(),
-            bind(std::less<int>(),
-                    bind(pointWeight, _1), bind(pointWeight, _2)))->weight();
+            std::tr1::bind(std::less<int>(),
+                    std::tr1::bind(pointWeight, _1),
+                    std::tr1::bind(pointWeight, _2)))->weight();
     Point<Dim> upperPoint;
     upperPoint[0] = max_weight + 2;
     Cont< Point<Dim> > approxSigmaSet;
