@@ -26,6 +26,7 @@
 #include <tr1/functional>
 
 #include "Point.hpp"
+#include "CoefficientTraits.hpp"
 
 /// \cond
 template<typename T>
@@ -181,9 +182,16 @@ public:
     /**
      * Polynomial addition (assignment version).
      * @param p[in] Polynomial to be added to this.
-     * @return Thos polynomial after addition \c p.
+     * @return This polynomial after addition \c p.
      */
     Polynomial operator+=(Polynomial const & p);
+
+    /**
+     * Polynomial subtraction (assignment version).
+     * @param p[in] Polynomial to be subtracted from this.
+     * @return This polynomial after addition \c p.
+     */
+    Polynomial operator-=(Polynomial const & p);
 
     /**
      * Polynomial comparison for equality after normalization.
@@ -208,6 +216,14 @@ public:
     void setCoefs(StorageT const & data)  { this->data = data; }
 
     StorageT const & getCoefs() const     { return data; }
+
+    static Polynomial getId() {
+        std::string strRep;
+        std::fill_n(std::back_inserter(strRep), VAR_CNT, '[');
+        strRep.push_back('1');
+        std::fill_n(std::back_inserter(strRep), VAR_CNT, ']');
+        return Polynomial(strRep);
+    }
 
 private:
     /**
@@ -241,7 +257,7 @@ private:
     void normalization() {
         if (data.size() < 2)
             return; // we will not delete single zero
-        ElemT tempDefElem;
+        ElemT tempDefElem = ElemT();
         typename StorageT::iterator it = --data.end(); // it is still valid
         do {
             if (*it == tempDefElem)
@@ -593,6 +609,20 @@ template<typename T>
 inline
 Polynomial<T> operator+(Polynomial<T> lhs, Polynomial<T> const & rhs) {
     return lhs += rhs;
+}
+
+template<typename T>
+Polynomial<T> Polynomial<T>::operator-=(Polynomial<T> const & p) {
+    return (*this +=
+                CoefficientTraits<CoefT>::addInverse(
+                        CoefficientTraits<CoefT>::multId())
+                * p);
+}
+
+template<typename T>
+inline
+Polynomial<T> operator-(Polynomial<T> lhs, Polynomial<T> const & rhs) {
+    return lhs -= rhs;
 }
 
 #endif /* MV_POLY_HPP_ */

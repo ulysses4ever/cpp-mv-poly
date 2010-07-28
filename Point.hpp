@@ -134,7 +134,9 @@ public:
 template<int Dim>
 inline
 std::ostream& operator<<(std::ostream & os, Point<Dim> const & pt) {
+    os << "( ";
     std::copy(pt.begin(), pt.end(), std::ostream_iterator<int>(os, " "));
+    os << ")";
     return os;
 }
 
@@ -373,6 +375,8 @@ Cont<Point<Dim> > getConjugatePointCollection(Cont<Point<Dim> > const & points) 
     using std::tr1::function;
     using std::tr1::placeholders::_1;
     using std::tr1::placeholders::_2;
+    if (points.empty())
+        return Cont< Point<Dim> >(1);
     function<int (Point<Dim>)> pointWeight = bind(&Point<Dim>::weight, _1);
     int max_weight = std::max_element(points.begin(), points.end(),
             std::tr1::bind(std::less<int>(),

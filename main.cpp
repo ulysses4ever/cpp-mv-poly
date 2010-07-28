@@ -10,15 +10,20 @@
 #include <iostream>
 #include <iterator>
 #include <list>
+#include <map>
 #include <sstream>
 #include <set>
 #include <string>
 #include <typeinfo>
+#include <utility>
+
+#include <tr1/functional>
 
 #include <NTL/GF2.h>
 
 #include "mv_poly.hpp"
 #include "Point.hpp"
+#include "bmsa.hpp"
 
 using std::cout;
 using std::endl;
@@ -26,24 +31,32 @@ using std::string;
 using std::copy;
 using std::ostream_iterator;
 
-template<int Dim>
-void f(Point<Dim> const & pt1, Point<Dim> const & pt2) {
-    using std::tr1::bind;
-    using namespace std::tr1::placeholders;
-    using std::tr1::cref;
-    cout << bind(&byCoordinateLess<2>, cref(pt1), _1)(pt2);
-}
-
 int main() {
-    MVPolyType<2, int>::ResultT p("[[1 0 1] [1 1]]"), q(p);
-    q += p;
-    p *= 2;
-    cout << p << endl;
-    cout << q << endl;
-    cout << (p == q) << endl;
-    cout << p << endl;
-    cout << q << endl;
+    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
+    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
+    Point<2> pt;
+    pt[0] = 2; pt[1] = 0;
+    BMSAlgorithm< PolyT > alg(u, pt);
+    BMSAlgorithm< PolyT >::PolynomialCollection minset = alg.computeMinimalSet();
+//    copy(minset.begin(), minset.end(), std::ostream_iterator<PolyT>(cout, "\n"));
 
+//    pt[0] = 0; pt[1] = 0;
+//    PolyT f("[[0] [0] [1]]");
+//    PolyT g = f << pt;
+//    cout << g << endl;
+
+//    MVPolyType<2, int>::ResultT p("[[1 0 1] [1 1]]"), q("[[2 3] [0 2] [3]]");
+//    MVPolyType<2, int>::ResultT pPlusQ = p + q;// "[[3 3 1]] [1 3] [3]";
+//    cout << pPlusQ << endl;
+
+//    MVPolyType<2, int>::ResultT p("[[1 0 1] [1 1]]"), q(p);
+//    q += p;
+//    p *= 2;
+//    cout << p << endl;
+//    cout << q << endl;
+//    cout << (p == q) << endl;
+//    cout << p << endl;
+//    cout << q << endl;
 
 //    MVPolyType<2, int>::ResultT p("[[1 0 1] [1 1]]");
 //    Point<2> pt;
