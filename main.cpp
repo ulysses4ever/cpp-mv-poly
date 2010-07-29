@@ -31,6 +31,18 @@ using std::string;
 using std::copy;
 using std::ostream_iterator;
 
+template<typename T>
+void g() {
+
+}
+
+template<typename T>
+class Bar {
+    void f() {
+
+    }
+};
+
 int main() {
 //    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
 //    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
@@ -58,9 +70,9 @@ int main() {
     copy(F3.begin(), F3.end(), std::ostream_iterator<
             BMSAlgorithm< PolyT3 >::PointPolyMap::value_type>(cout, "\n"));
 
-    ptt[0] = 2; ptt[1] = 0; ptt[2] = 1;
-    PolyT3 f("[[[1 0 1] [0 1]] [[1 0] [1 1]]]");
-    f <<= ptt;
+//    ptt[0] = 2; ptt[1] = 0; ptt[2] = 1;
+//    PolyT3 f("[[[1 0 1] [0 1]] [[1 0] [1 1]]]");
+//    f <<= ptt;
 //    (( 0 1 ), [[1 1] [1]])
 //    (( 2 0 ), [[0] [0] [1]])
 

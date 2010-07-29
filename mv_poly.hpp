@@ -237,8 +237,12 @@ private:
      * @param sl
      * @return
      */
-    template<int Offset>
-    CoefT operator[](Slice<VAR_CNT, Offset> const & sl) const;
+    template<int Dim, int Offset>
+    CoefT operator[](Slice<Dim, Offset> const & sl) const;
+
+    template<typename T1, typename S, typename Pt>
+    friend
+    T1 applySubscript(S const & el, Pt const & pt);
 
     /**
      * Implementation detail: used in operator<<=(Point<VAR_CNT>) for going
@@ -248,8 +252,13 @@ private:
      * @return This polynomial with one more dimension multiplied on the next
      * initial point component pointed to by the current slice.
      */
-    template<int Offset>
-    Polynomial operator<<=(Slice<VAR_CNT, Offset> const & m);
+    template<int Dim, int Offset>
+    Polynomial operator<<=(Slice<Dim, Offset> const & m);
+
+    template<typename S, typename Pt>
+    friend
+    void applyMonomialMultiplication(S & elem, Pt const & monomial);
+
 
     /**
      * Delete trailing zeros in coefficient collection \c data.
@@ -341,10 +350,10 @@ Polynomial<T>::operator[](Point<VAR_CNT> const & pt) const {
 }
 
 template<typename T>
-template<int Offset>
+template<int Dim, int Offset>
 typename Polynomial<T>::CoefT
-Polynomial<T>::operator[](Slice<VAR_CNT, Offset> const & sl) const {
-    if (sl[0] < 0 || data.size() <= sl[0])
+Polynomial<T>::operator[](Slice<Dim, Offset> const & sl) const {
+    if (sl[0] < int(0) || int(data.size()) <= sl[0])
         return CoefT();
     else
         return applySubscript<Polynomial<T>::CoefT>(data[sl[0]], make_slice(sl));
@@ -513,11 +522,6 @@ void applyMonomialMultiplication(
 template<typename T>
 inline
 Polynomial<T> Polynomial<T>::operator<<=(Point<VAR_CNT> const & monomial) {
-//    using std::tr1::bind;
-//    using std::tr1::placeholders::_1;
-//    std::for_each(data.begin(), data.end(), // niasilil
-//            bind(applyMonomialMultiplication<ElemT, Slice<VAR_CNT, 1> >,
-//                    _1, make_slice(monomial))); // TODO: add cref
     for (typename StorageT::iterator it = data.begin(); it != data.end(); ++it)
         applyMonomialMultiplication(*it, make_slice(monomial));
     std::fill_n(std::front_inserter(data), monomial[0], ElemT());
@@ -525,14 +529,13 @@ Polynomial<T> Polynomial<T>::operator<<=(Point<VAR_CNT> const & monomial) {
 }
 
 template<typename T>
-template<int Offset>
+template<int Dim, int Offset>
 inline
-Polynomial<T> Polynomial<T>::operator<<=(Slice<VAR_CNT, Offset> const & monomial) {
+Polynomial<T> Polynomial<T>::operator<<=(Slice<Dim, Offset> const & monomial) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1;
-    std::for_each(data.begin(), data.end(),
-            bind(applyMonomialMultiplication<ElemT, Slice<VAR_CNT, Offset-1> >,
-                    _1, make_slice(monomial)));
+    for (typename StorageT::iterator it = data.begin(); it != data.end(); ++it)
+        applyMonomialMultiplication(*it, make_slice(monomial));
     std::fill_n(std::front_inserter(data), monomial[0], ElemT());
     return *this;
 }

@@ -420,7 +420,7 @@ class Slice {
 public:
     Slice(Point<Dim> const & pt_) : pt(pt_) {}
 
-    Point<Dim> const & getImpl() {return pt;}
+    Point<Dim> const & getImpl() const {return pt;}
 
     typedef typename Point<Dim>::const_reference const_reference;
 
@@ -432,7 +432,7 @@ public:
     }
 };
 
-/// Slice of the point is “1-slice”. For 1-slice sl[i] ~ pt[i + 1].
+/// Slice of the point is “1-slice”, for 1-slice sl[i] ~ pt[i + 1].
 template<int Dim>
 Slice<Dim, 1> make_slice(Point<Dim> const & pt) {
     return Slice<Dim, 1>(pt);

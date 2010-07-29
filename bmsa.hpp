@@ -82,7 +82,7 @@ public:
                 Point<Dim> const & degF = fIt->first;
                 PolynomialT const & f = fIt->second;
                 if (byCoordinateLess(degF, k)) {
-                    CoefT b;// = conv(f, seq, degF, k);
+                    CoefT b = conv(f, seq, degF, k);
                     discr[degF] = b;
                     Point<Dim> c = k - degF;
                     if (b != ZERO) {
@@ -152,12 +152,12 @@ public:
                     if ((notJustIncreaseDegree = (cIt != G.end()))) {
                         // yes, I mean assignment at the top of if condition
                         Point<Dim> const & c = cIt->first;
-//                        newF[t] = (F[s] << u) - // Berlekamp formula
-//                            (discr[s] * G[c] << (c - (k - t)));
+                        newF[t] = (F[s] << u) - // Berlekamp formula
+                            (discr[s] * G[c] << (c - (k - t)));
                     }
                 }
                 if (!notJustIncreaseDegree) {
-//                    newF[t] = F[s] << u;
+                    newF[t] = F[s] << u;
                     cout << "Just increased degree" << endl;
                 }
             }
