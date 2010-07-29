@@ -219,9 +219,12 @@ bool byCoordinateGreaterThenAny(Point<Dim> const & pt, PtCont const & c) {
 template<int Dim>
 inline
 bool totalLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
-    return lhs.weight() < rhs.weight()
-            || std::lexicographical_compare(lhs.rbegin(), lhs.rend(),
-                    rhs.rbegin(), rhs.rend());
+    int lw = lhs.weight();
+    int rw = rhs.weight();
+    return (lw < rw)
+            || (lw == rw
+                    && std::lexicographical_compare(lhs.rbegin(), lhs.rend(),
+                            rhs.rbegin(), rhs.rend()));
 }
 
 template<int Dim>

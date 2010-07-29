@@ -32,13 +32,61 @@ using std::copy;
 using std::ostream_iterator;
 
 int main() {
-    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
-    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
-    Point<2> pt;
-    pt[0] = 2; pt[1] = 0;
-    BMSAlgorithm< PolyT > alg(u, pt);
-    BMSAlgorithm< PolyT >::PolynomialCollection minset = alg.computeMinimalSet();
-//    copy(minset.begin(), minset.end(), std::ostream_iterator<PolyT>(cout, "\n"));
+//    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
+//    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
+//    Point<2> pt;
+//    pt[0] = 4; pt[1] = 1;
+//    BMSAlgorithm< PolyT > alg(u, pt);
+//    BMSAlgorithm< PolyT >::PolynomialCollection minset = alg.computeMinimalSet();
+//    BMSAlgorithm< PolyT >::PointPolyMap F = alg.getF();
+//    copy(F.begin(), F.end(), std::ostream_iterator<
+//            BMSAlgorithm< PolyT >::PointPolyMap::value_type>(cout, "\n"));
+    //copy(minset.begin(), minset.end(), std::ostream_iterator<PolyT>(cout, "\n"));
+
+    Point<3> ptt;
+    ptt[0] = 5; ptt[1] = 0; ptt[2] = 1;
+    typedef MVPolyType<3, NTL::GF2>::ResultT PolyT3;
+    PolyT3 v(
+            "[[[1 1 1 1 0 0] [0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]"//x = 0
+            "[[1 1 0 1 1] [1 0 1 1] [0 1 1] [1 1] [1] [0]]" // x = 1
+            "[[0 1 0 0] [0 0 1] [0 0] [1] [0]]" // x = 2
+            "[[1 1 0] [1 0] [0] [1]] [[1 1] [0] [1]] [[1] [1]] [[0]]]" // x = 3-6
+            );
+    BMSAlgorithm< PolyT3 > alg3(v, ptt);
+    BMSAlgorithm< PolyT3 >::PolynomialCollection minset = alg3.computeMinimalSet();
+    BMSAlgorithm< PolyT3 >::PointPolyMap F3 = alg3.getF();
+    copy(F3.begin(), F3.end(), std::ostream_iterator<
+            BMSAlgorithm< PolyT3 >::PointPolyMap::value_type>(cout, "\n"));
+
+    ptt[0] = 2; ptt[1] = 0; ptt[2] = 1;
+    PolyT3 f("[[[1 0 1] [0 1]] [[1 0] [1 1]]]");
+    f <<= ptt;
+//    (( 0 1 ), [[1 1] [1]])
+//    (( 2 0 ), [[0] [0] [1]])
+
+//    k = ( 2 1 )
+//    failed: [[1 1] [1]]
+//    span: ( 2 0 )
+
+//    typedef std::map<Point<2>, PolyT> PointPolyMap;
+//    PointPolyMap m;
+//    pt[0] = 0; pt[1] = 1;
+//    m.insert(std::make_pair(pt, PolyT("[[0 1]]")));
+//    pt[0] = 2; pt[1] = 0;
+//    m.insert(std::make_pair(pt, PolyT("[[0] [0] [1]]")));
+//
+//    pt[0] = 2; pt[1] = 0;
+//    cout << m[pt] << endl;
+//    copy(m.begin(), m.end(),
+//            std::ostream_iterator<PointPolyMap::value_type>(cout, "\n"));
+
+//    Point<2> pt4, pt5;
+//    pt4[0] = 0; pt4[1] = 1;
+//    pt5[0] = 2; pt5[1] = 0;
+//    cout << totalLess(pt4, pt5) << endl;
+//    cout << totalLess(pt5, pt4) << endl;
+//    (( 2 0 ), [[0] [0] [1]])
+//    (( 0 1 ), [[0 1]])
 
 //    pt[0] = 0; pt[1] = 0;
 //    PolyT f("[[0] [0] [1]]");

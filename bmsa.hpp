@@ -37,8 +37,10 @@ class BMSAlgorithm {
 
     typedef std::list< Point<Dim> > PointCollection;
 
+public:
     typedef std::map< Point<Dim>, PolynomialT > PointPolyMap;
 
+private:
     PointPolyMap F, G;
 
     typedef typename PolynomialT::CoefT CoefT;
@@ -80,15 +82,20 @@ public:
                 Point<Dim> const & degF = fIt->first;
                 PolynomialT const & f = fIt->second;
                 if (byCoordinateLess(degF, k)) {
-                    CoefT b = conv(f, seq, degF, k);
+                    CoefT b;// = conv(f, seq, degF, k);
                     discr[degF] = b;
-                    Point<Dim> d = k - degF;
+                    Point<Dim> c = k - degF;
+                    if (b != ZERO) {
+                        cout << "failed: " << f << endl;
+                        cout << "span: " << c << endl;
+                    }
                     if (b != ZERO &&
                             !byCoordinateLessThenAny(
-                                    d,
-                                    make_choose_point_iterator(F.begin()),
-                                    make_choose_point_iterator(F.end()))) {
-                        deltaPoints.push_back(d);
+                                    c,
+                                    make_choose_point_iterator(G.begin()),
+                                    make_choose_point_iterator(G.end()))) {
+                        deltaPoints.push_back(c);
+                        cout << "fallen: " << f << endl;
                     }
                 }
             }
@@ -130,8 +137,9 @@ public:
                         bind(&byCoordinateLess<Dim>, _1, cref(t))));
                 Point<Dim> u = t - s; // valid Point as true == byCoordinateLess(s, t)
                 cout << "t: " << t << " ";
-//                cout << "s: " << s << " ";
-//                cout << "u: " << u << endl;
+                cout << "s: " << s << " ";
+//                cout << "u: " << u;
+                cout << endl;
                 //cout << "F[s] << u: " << (F[s] << u) << endl;
                 bool notJustIncreaseDegree = true; // some tricky flag to avoid goto
                 if ((notJustIncreaseDegree = byCoordinateLess(t, k))) {
@@ -144,12 +152,12 @@ public:
                     if ((notJustIncreaseDegree = (cIt != G.end()))) {
                         // yes, I mean assignment at the top of if condition
                         Point<Dim> const & c = cIt->first;
-                        newF[t] = (F[s] << u) - // Berlekamp formula
-                            (discr[s] * G[c] << (c - (k - t)));
+//                        newF[t] = (F[s] << u) - // Berlekamp formula
+//                            (discr[s] * G[c] << (c - (k - t)));
                     }
                 }
                 if (!notJustIncreaseDegree) {
-                    newF[t] = F[s] << u;
+//                    newF[t] = F[s] << u;
                     cout << "Just increased degree" << endl;
                 }
             }
@@ -158,31 +166,17 @@ public:
             oldDeltaPoints.clear();
             oldDeltaPoints.splice(oldDeltaPoints.end(), deltaPoints);
 
-            //PolynomialCollection Ftemp = getPolynomialList();
             cout << "F: " << endl;
             copy(F.begin(), F.end(),
                     std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
-            Point<Dim> ss, kk;
-            kk[0] = 1; kk[1] = 0;
-            if (k == kk) {
-                ss[0] = 2; ss[1] = 0;
-                cout << "ss: " << ss << endl;
-                cout << "F[ss]: " << F[ss] << endl;
-//                ss[0] = 0; ss[1] = 1;
-//                cout << "ss: " << ss << endl;
-//                cout << "F[ss]: " << F[ss] << endl;
-//                ss[0] = 1; ss[1] = 0;
-//                cout << "ss: " << ss << endl;
-//                cout << "F[ss]: " << F[ss] << endl;
-            }
-            cout << "F once more: " << endl;
-            copy(F.begin(), F.end(),
-                    std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
             cout << endl;
-
         }
         return getPolynomialList();
 
+    }
+
+    PointPolyMap const & getF() {
+        return F;
     }
 
 private:
