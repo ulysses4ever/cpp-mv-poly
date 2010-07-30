@@ -158,7 +158,7 @@ public:
                 }
                 if (!notJustIncreaseDegree) {
                     newF[t] = F[s] << u;
-                    cout << "Just increased degree" << endl;
+                    cout << "Just increased degree on " << u << endl;
                 }
             }
             F = newF;
@@ -168,6 +168,9 @@ public:
 
             cout << "F: " << endl;
             copy(F.begin(), F.end(),
+                    std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
+            cout << "G: " << endl;
+            copy(G.begin(), G.end(),
                     std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
             cout << endl;
         }
