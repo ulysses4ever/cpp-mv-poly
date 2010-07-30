@@ -67,9 +67,40 @@ int main() {
     BMSAlgorithm< PolyT3 > alg3(v, ptt);
     BMSAlgorithm< PolyT3 >::PolynomialCollection minset = alg3.computeMinimalSet();
     BMSAlgorithm< PolyT3 >::PointPolyMap F3 = alg3.getF();
-    copy(F3.begin(), F3.end(), std::ostream_iterator<
-            BMSAlgorithm< PolyT3 >::PointPolyMap::value_type>(cout, "\n"));
 
+    Point<3> degf;
+    degf[0] = 0; degf[1] = 0; degf[2] = 3;
+    //PolyT3 const & f = F3[degf];
+    PolyT3 f("[[[1] [1 1]]]");
+
+    for (Point<3> i; i < ptt; ++i) {
+        if (byCoordinateLess(degf, i))
+            cout << "i: " << i << " discr = " << conv(f, v, degf, i) << endl;
+    }
+//    copy(F3.begin(), F3.end(), std::ostream_iterator<
+//            BMSAlgorithm< PolyT3 >::PointPolyMap::value_type>(cout, "\n"));
+//
+//    PolyT3 f("[[[1] [1]] [[1]]]");
+//    ptt[0] = 0; ptt[1] = 1; ptt[2] = 1;
+//    degf[0] = 0; degf[1] = 1; degf[2] = 0;
+//    cout << conv(f, v, degf, ptt) << endl;
+
+//    const int Dim = 3;
+//    Point<Dim> upperPoint;
+//    upperPoint[0] = 1 + 2;
+//    std::list< Point<Dim> > approxSigmaSet;
+//    for (Point<Dim> i; i < upperPoint; ++i) {
+////        if (! byCoordinateLessThenAny(i, points))
+////            approxSigmaSet.push_back(i);
+//        //cout << "i: " << i << endl;
+//    }
+//
+//    Point<4> pt, up;
+//    pt[0] = 4;
+//    up[0] = 5;
+//    while(pt++ < up) {
+//        cout << pt << endl;
+//    }
 //    ptt[0] = 2; ptt[1] = 0; ptt[2] = 1;
 //    PolyT3 f("[[[1 0 1] [0 1]] [[1 0] [1 1]]]");
 //    f <<= ptt;
