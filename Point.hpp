@@ -9,6 +9,9 @@
 #ifndef POINT_HPP_
 #define POINT_HPP_
 
+#include <algorithm>
+#include <iterator>
+#include <iostream>
 #include <memory>
 
 #include <tr1/array>
@@ -252,22 +255,25 @@ bool totalLessOrEqual(Point<Dim> const & lhs, Point<Dim> const & rhs) {
 template<int Dim>
 inline
 Point<Dim>& Point<Dim>::operator++() {
-    typename Point<Dim>::reverse_iterator rit = this->rbegin();
-    typename Point<Dim>::reverse_iterator rit_to_inc(rit++);
-    while (rit != this->rend()) {
-        // loop invariant: rit is one step further then rit_to_inc
-        if (*rit > 0) {
-            --*rit;
-            ++*rit_to_inc;
-            return *this;
-        }
-        ++rit;
-        ++rit_to_inc;
+    using namespace std::tr1::placeholders;
+    using std::tr1::bind;
+    typename ImplType::iterator
+            itInc = std::find_if(data.begin(), data.end(),
+                std::tr1::bind(std::logical_not<bool>(),
+                        std::tr1::bind(std::equal_to<int>(), 0, _1))),
+            it(itInc++);
+    if (it == data.end())
+        data[0] = 1;
+    else if (itInc == data.end()) {
+        int a = *it + 1;
+        *it = 0;
+        data[0] = a;
+    } else {
+        ++(*itInc);
+        int a = *it - 1;
+        *it = 0;
+        data[0] = a;
     }
-    // rit == pt.rend()
-    // pt = (0, 0, ..., 0, a) and result shoud be (a + 1, 0, ..., 0)
-    *rit_to_inc = *(this->rbegin()) + 1;
-    *(this->rbegin()) = 0;
     return *this;
 }
 
@@ -392,6 +398,9 @@ Cont<Point<Dim> > getConjugatePointCollection(Cont<Point<Dim> > const & points) 
         if (! byCoordinateLessThenAny(i, points))
             approxSigmaSet.push_back(i);
     }
+    std::cout << "app set" << std::endl;
+    std::copy(approxSigmaSet.begin(), approxSigmaSet.end(),
+            std::ostream_iterator< Point<Dim> >(std::cout, "\n"));
     return getPartialMinimums(approxSigmaSet);
 }
 /**
