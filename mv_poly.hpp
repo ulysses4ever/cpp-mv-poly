@@ -82,9 +82,12 @@ public:
 template<typename T>
 class Polynomial {
 public:
-//    template<typename S>
-//    friend
-//    std::istream& operator>>(std::istream& is, Polynomial & p);
+    template<typename S>
+    friend
+    std::istream& operator>>(std::istream& is, Polynomial<S> & p);
+
+    friend
+    void outputTest();
 //
 //    template<typename S>
 //    friend
@@ -213,8 +216,6 @@ public:
 
     typedef std::deque<ElemT>   StorageT;
 
-    void setCoefs(StorageT const & data)  { this->data = data; }
-
     StorageT const & getCoefs() const     { return data; }
 
     static Polynomial getId() {
@@ -278,6 +279,8 @@ private:
             ++it;
         data.erase(it, data.end());
     }
+
+    void setCoefs(StorageT const & data)  { this->data = data; }
 
     StorageT data;
 };
@@ -421,7 +424,7 @@ std::istream& operator>>(std::istream& is, Polynomial<T> & p) {
 
     if (is) {
         is.ignore(); // ignore trailing ']'
-        p.setCoefs( tempStorage );
+        p.setCoefs(tempStorage);
     }
     return is;
 }
