@@ -424,7 +424,10 @@ std::istream& operator>>(std::istream& is, Polynomial<T> & p) {
 
     if (is) {
         is.ignore(); // ignore trailing ']'
-        p.setCoefs(tempStorage);
+        if (!tempStorage.empty())
+            p.setCoefs(tempStorage);
+        else
+            p = Polynomial<T>();
     }
     return is;
 }
