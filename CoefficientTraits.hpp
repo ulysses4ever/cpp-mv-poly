@@ -10,6 +10,8 @@
 #ifndef COEFFICIENTTRAITS_HPP_
 #define COEFFICIENTTRAITS_HPP_
 
+namespace mv_poly {
+
 template<typename CoefT>
 struct CoefficientTraits {
     static CoefT multInverse(CoefT const & c) {
@@ -43,5 +45,7 @@ struct CoefficientTraits<NTL::GF2> {
         return NTL::to_GF2(1);
     }
 };
+
+} // namespace mv_poly
 
 #endif /* COEFFICIENTTRAITS_HPP_ */

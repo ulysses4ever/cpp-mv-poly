@@ -28,6 +28,12 @@
 #include "Point.hpp"
 #include "CoefficientTraits.hpp"
 
+namespace TestMVPoly {
+void outputTest();
+}
+
+namespace mv_poly {
+
 /// \cond
 template<typename T>
 class Polynomial;
@@ -87,7 +93,7 @@ public:
     std::istream& operator>>(std::istream& is, Polynomial<S> & p);
 
     friend
-    void outputTest();
+    void TestMVPoly::outputTest();
 //
 //    template<typename S>
 //    friend
@@ -633,5 +639,7 @@ inline
 Polynomial<T> operator-(Polynomial<T> lhs, Polynomial<T> const & rhs) {
     return lhs -= rhs;
 }
+
+} // namespace mv_poly
 
 #endif /* MV_POLY_HPP_ */

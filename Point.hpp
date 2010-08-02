@@ -19,6 +19,7 @@
 
 #include <boost/foreach.hpp>
 
+namespace mv_poly {
 
 /**
  * Point in N-dimensional integer lattice.
@@ -455,4 +456,5 @@ Slice<Dim, Offset + 1> make_slice(Slice<Dim, Offset> const & sl) {
     return Slice<Dim, Offset + 1>(sl.getImpl());
 }
 
+} // namespace mv_poly
 #endif /* POINT_HPP_ */

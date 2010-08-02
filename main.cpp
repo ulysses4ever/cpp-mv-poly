@@ -31,19 +31,36 @@ using std::string;
 using std::copy;
 using std::ostream_iterator;
 
-template<typename T>
-void g() {
+using namespace mv_poly;
+
+using namespace std;
+
+namespace ns_f {
+    void f();
+}
+
+namespace my_ns {
+
+class A {};
 
 }
 
-template<typename T>
-class Bar {
-    void f() {
+//template<typename T1, typename T2>
+//inline
+//std::ostream& operator<<(std::ostream & os, std::pair<T1, T2> const & p) {
+//    os << "(" << p.first << ", " << p.second << ")";
+//    return os;
+//}
 
-    }
-};
+//template<typename T>
+//void g() {
+//    using my_ns::A;
+//    list< pair<A, A> > l(5);
+//    copy(l.begin(), l.end(), ostream_iterator< pair<A, A> >(cout, "\n"));
+//}
 
 int main() {
+//    g<int>();
 //    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
 //    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
 //    Point<2> pt;
