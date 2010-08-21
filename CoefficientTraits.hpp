@@ -10,41 +10,62 @@
 #ifndef COEFFICIENTTRAITS_HPP_
 #define COEFFICIENTTRAITS_HPP_
 
+#include <loki/Typelist.h>
+#include <loki/TypeManip.h>
+
+#include <NTL/GF2.h>
+#include <NTL/GF2E.h>
+#include <NTL/ZZ_p.h>
+#include <NTL/ZZ_pE.h>
+
 namespace mv_poly {
 
 template<typename CoefT>
-struct CoefficientTraits {
+struct DefaultCoefficientTraits {
     static CoefT multInverse(CoefT const & c) {
-        //return inv(c); // NTL-way // TODO: implement choosing inv for NTL types
-        return c;
+        return 1 / c;
     }
 
     static CoefT addInverse(CoefT const & c) {
-        //return inv(c); // NTL-way // TODO: implement choosing inv for NTL types
-        return c;
-    }
-
-    static CoefT multId() {
-        //return inv(c); // NTL-way // TODO: implement choosing inv for NTL types
-        return CoefT();
-    }
-};
-
-#include <NTL/GF2.h>
-template<>
-struct CoefficientTraits<NTL::GF2> {
-    static NTL::GF2 multInverse(NTL::GF2 const & c) {
-        return NTL::inv(c);
-    }
-
-    static NTL::GF2 addInverse(NTL::GF2 const & c) {
         return -c;
     }
 
-    static NTL::GF2 multId() {
-        return NTL::to_GF2(1);
+    static CoefT multId() {
+        return 1;
     }
 };
+
+template<typename T>
+struct NtlCoefficientTraits {
+    static T multInverse(T const & c) {
+        return NTL::inv(c);
+    }
+
+    static T addInverse(T const & c) {
+        return -c;
+    }
+
+    static T multId() {
+        static T a;
+        clear(a);
+        return a;
+    }
+};
+
+template<typename T>
+class isNtlType {
+    typedef LOKI_TYPELIST_4(NTL::GF2, NTL::GF2E, NTL::ZZ_p, NTL::ZZ_pE)
+            NtlFiniteFieldTypes;
+
+public:
+    enum { result = Loki::TL::IndexOf<NtlFiniteFieldTypes, T>::value >= 0 };
+};
+
+template<typename CoefT>
+struct CoefficientTraits : public Loki::Select<
+                            isNtlType<CoefT>::result,
+                            NtlCoefficientTraits<CoefT>,
+                            DefaultCoefficientTraits<CoefT> >::Result {};
 
 } // namespace mv_poly
 

@@ -399,9 +399,9 @@ Cont<Point<Dim> > getConjugatePointCollection(Cont<Point<Dim> > const & points) 
         if (! byCoordinateLessThenAny(i, points))
             approxSigmaSet.push_back(i);
     }
-    std::cout << "app set" << std::endl;
-    std::copy(approxSigmaSet.begin(), approxSigmaSet.end(),
-            std::ostream_iterator< Point<Dim> >(std::cout, "\n"));
+//    std::cout << "app set" << std::endl;
+//    std::copy(approxSigmaSet.begin(), approxSigmaSet.end(),
+//            std::ostream_iterator< Point<Dim> >(std::cout, "\n"));
     return getPartialMinimums(approxSigmaSet);
 }
 /**

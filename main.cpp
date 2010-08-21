@@ -35,42 +35,15 @@ using namespace mv_poly;
 
 using namespace std;
 
-namespace ns_f {
-    void f();
-}
-
-namespace my_ns {
-
-class A {};
-
-}
-
-//template<typename T1, typename T2>
-//inline
-//std::ostream& operator<<(std::ostream & os, std::pair<T1, T2> const & p) {
-//    os << "(" << p.first << ", " << p.second << ")";
-//    return os;
-//}
-
-//template<typename T>
-//void g() {
-//    using my_ns::A;
-//    list< pair<A, A> > l(5);
-//    copy(l.begin(), l.end(), ostream_iterator< pair<A, A> >(cout, "\n"));
-//}
-
 int main() {
-//    g<int>();
-//    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
-//    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
-//    Point<2> pt;
-//    pt[0] = 4; pt[1] = 1;
-//    BMSAlgorithm< PolyT > alg(u, pt);
-//    BMSAlgorithm< PolyT >::PolynomialCollection minset = alg.computeMinimalSet();
-//    BMSAlgorithm< PolyT >::PointPolyMap F = alg.getF();
-//    copy(F.begin(), F.end(), std::ostream_iterator<
-//            BMSAlgorithm< PolyT >::PointPolyMap::value_type>(cout, "\n"));
-    //copy(minset.begin(), minset.end(), std::ostream_iterator<PolyT>(cout, "\n"));
+    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
+    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
+    Point<2> pt;
+    pt[0] = 4; pt[1] = 1;
+    BMSAlgorithm< PolyT > alg(u, pt);
+    BMSAlgorithm< PolyT >::PolynomialCollection minset2 = alg.computeMinimalSet();
+    BMSAlgorithm< PolyT >::PointPolyMap F = alg.getF();
+    copy(minset2.begin(), minset2.end(), std::ostream_iterator<PolyT>(cout, "\n"));
 
     Point<3> ptt;
     ptt[0] = 5; ptt[1] = 0; ptt[2] = 1;
@@ -83,17 +56,20 @@ int main() {
             );
     BMSAlgorithm< PolyT3 > alg3(v, ptt);
     BMSAlgorithm< PolyT3 >::PolynomialCollection minset = alg3.computeMinimalSet();
-    BMSAlgorithm< PolyT3 >::PointPolyMap F3 = alg3.getF();
+    //BMSAlgorithm< PolyT3 >::PointPolyMap F3 = alg3.getF();
 
-    Point<3> degf;
-    degf[0] = 0; degf[1] = 0; degf[2] = 3;
+    copy(minset.begin(), minset.end(), std::ostream_iterator<
+            BMSAlgorithm< PolyT3 >::PolynomialCollection::value_type>(cout, "\n"));
+
+    //    Point<3> degf;
+//    degf[0] = 0; degf[1] = 0; degf[2] = 3;
     //PolyT3 const & f = F3[degf];
-    PolyT3 f("[[[1] [1 1]]]");
+//    PolyT3 f("[[[1] [1 1]]]");
 
-    for (Point<3> i; i < ptt; ++i) {
-        if (byCoordinateLess(degf, i))
-            cout << "i: " << i << " discr = " << conv(f, v, degf, i) << endl;
-    }
+//    for (Point<3> i; i < ptt; ++i) {
+//        if (byCoordinateLess(degf, i))
+//            cout << "i: " << i << " discr = " << conv(f, v, degf, i) << endl;
+//    }
 //    copy(F3.begin(), F3.end(), std::ostream_iterator<
 //            BMSAlgorithm< PolyT3 >::PointPolyMap::value_type>(cout, "\n"));
 //

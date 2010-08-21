@@ -76,7 +76,7 @@ public:
         PointCollection oldDeltaPoints;
         // scanning input sequense step-by-step, following monomial order
         for (Point<Dim> k; k < seqLen; ++k) {
-            cout << "k = " << k << endl;
+//            cout << "k = " << k << endl;
             PointPolyMap newF, newG;
             PointCollection deltaPoints, sigmaPoints;
             PointCoefMap discr; // discrepancies
@@ -90,8 +90,8 @@ public:
                     discr[degF] = b;
                     Point<Dim> c = k - degF;
                     if (b != ZERO) {
-                        cout << "failed: " << f << endl;
-                        cout << "span: " << c << endl;
+//                        cout << "failed: " << f << endl;
+//                        cout << "span: " << c << endl;
                     }
                     if (b != ZERO &&
                             !byCoordinateLessThenAny(
@@ -99,7 +99,7 @@ public:
                                     make_choose_point_iterator(G.begin()),
                                     make_choose_point_iterator(G.end()))) {
                         deltaPoints.push_back(c);
-                        cout << "fallen: " << f << endl;
+//                        cout << "fallen: " << f << endl;
                     }
                 }
             }
@@ -107,12 +107,12 @@ public:
             deltaPoints = getPartialMaximums(deltaPoints);
             sigmaPoints = getConjugatePointCollection(deltaPoints);
 
-            cout << "Delta-points:" << endl;
-            copy(deltaPoints.begin(), deltaPoints.end(),
-                    std::ostream_iterator< Point<Dim> >(cout, "\n"));
-            cout << "Sigma-points:" << endl;
-            copy(sigmaPoints.begin(), sigmaPoints.end(),
-                    std::ostream_iterator< Point<Dim> >(cout, "\n"));
+//            cout << "Delta-points:" << endl;
+//            copy(deltaPoints.begin(), deltaPoints.end(),
+//                    std::ostream_iterator< Point<Dim> >(cout, "\n"));
+//            cout << "Sigma-points:" << endl;
+//            copy(sigmaPoints.begin(), sigmaPoints.end(),
+//                    std::ostream_iterator< Point<Dim> >(cout, "\n"));
 
             // forming new G
             for (typename PointCollection::const_iterator
@@ -140,10 +140,10 @@ public:
                         make_choose_point_iterator(F.end()),
                         bind(&byCoordinateLess<Dim>, _1, cref(t))));
                 Point<Dim> u = t - s; // valid Point as true == byCoordinateLess(s, t)
-                cout << "t: " << t << " ";
-                cout << "s: " << s << " ";
+//                cout << "t: " << t << " ";
+//                cout << "s: " << s << " ";
 //                cout << "u: " << u;
-                cout << endl;
+//                cout << endl;
                 //cout << "F[s] << u: " << (F[s] << u) << endl;
                 bool notJustIncreaseDegree = true; // some tricky flag to avoid goto
                 if ((notJustIncreaseDegree = byCoordinateLess(t, k))) {
@@ -162,7 +162,7 @@ public:
                 }
                 if (!notJustIncreaseDegree) {
                     newF[t] = F[s] << u;
-                    cout << "Just increased degree on " << u << endl;
+//                    cout << "Just increased degree on " << u << endl;
                 }
             }
             F = newF;
@@ -170,13 +170,13 @@ public:
             oldDeltaPoints.clear();
             oldDeltaPoints.splice(oldDeltaPoints.end(), deltaPoints);
 
-            cout << "F: " << endl;
-            copy(F.begin(), F.end(),
-                    std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
-            cout << "G: " << endl;
-            copy(G.begin(), G.end(),
-                    std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
-            cout << endl;
+//            cout << "F: " << endl;
+//            copy(F.begin(), F.end(),
+//                    std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
+//            cout << "G: " << endl;
+//            copy(G.begin(), G.end(),
+//                    std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
+//            cout << endl;
         }
         return getPolynomialList();
 
