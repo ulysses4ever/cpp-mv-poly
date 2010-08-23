@@ -154,12 +154,11 @@ struct GradedAntilexMonomialOrder {
     typedef PointImpl PointImplType;
 
     /**
-     * This total oreder predicate implements monomial order. Namely graded
-     * antilexicographic order.
+     * This total oreder predicate implements graded antilexicographic order.
      * @param[in] lhs Left-hand side argument of “less”.
      * @param[in] rhs Right-hand side argument of “less”.
      * @return Result of comparison two points by current monomial order. True is
-     * \c lhs less then \c rhs, false otherwise.
+     * \c lhs less then \c rhs, false otherwise (rhs is less or equal to lhs).
      */
     static bool totalLess(PointImplType const & lhs, PointImplType const & rhs) {
         int lw = weight(lhs);

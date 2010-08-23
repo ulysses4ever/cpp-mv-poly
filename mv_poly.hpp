@@ -44,8 +44,7 @@ class Polynomial;
  @param VarCnt — polynomial variables count
  @param Coef — polynomial coefficient type */
 template<int VarCnt, typename Coef>
-class MVPolyType {
-public:
+struct MVPolyType {
     typedef Polynomial<typename MVPolyType<VarCnt - 1, Coef>::ResultT> ResultT;
 };
 
@@ -53,9 +52,8 @@ public:
 /* Specialization of MVPolyType
  for stopping recursive instantiation */
 template<typename Coef>
-class MVPolyType<1, Coef> {
-public:
-    // multivariab te polynomial from 1 variable is just Polynomial
+struct MVPolyType<1, Coef> {
+    // multivariate polynomial from 1 variable is just Polynomial
     typedef Polynomial<Coef> ResultT;
 };
 /// \endcond
@@ -94,10 +92,6 @@ public:
 
     friend
     void TestMVPoly::outputTest();
-//
-//    template<typename S>
-//    friend
-//    std::ostream& operator<<(std::ostream& os, Polynomial & p);
 
     Polynomial() : data(1) /* no-argument constructor
                                     for data element means 0 */ {}
@@ -130,7 +124,7 @@ public:
     /**
      * Number of polynomial variables. Actually it's nestedness depth of type
      * <tt>Polynomial<Polynomial<… Polynomial<T>… ></tt>.
-     */ // it probably should be initialized outside the class definition, but fail to...
+     */
     static const int VAR_CNT = 1 + VarCnt<T>::result;
 
     /**
