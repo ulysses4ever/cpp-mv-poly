@@ -21,13 +21,22 @@
 
 namespace mv_poly {
 
+template<typename PointImpl>
+struct GradedAntilexMonomialOrder;
+
 /**
  * Point in N-dimensional integer lattice.
  * @param Dim Dimension of point lattice.
  */
-template<int Dim>
-class Point {
-    typedef std::tr1::array<int, Dim> ImplType;
+template<
+    int Dim,
+    template <typename PointImpl> class OrderPolicy
+        = GradedAntilexMonomialOrder>
+class Point : public OrderPolicy< std::tr1::array<int, Dim> > {
+
+    typedef typename Point::PointImplType ImplType; // PointImplType inherited
+                                            // from GradedAntilexMonomialOrder
+                                            // to avoid duplication
 
     ImplType data;
 
@@ -37,8 +46,8 @@ public:
         data.assign(0);
     }
 
-    int weight() const {
-        return std::accumulate(data.begin(), data.end(), 0);
+    bool operator<(Point<Dim> const & other) const {
+        return totalLess(data, other.data);
     }
 
     typedef typename ImplType::size_type size_type;
@@ -129,15 +138,71 @@ public:
 };
 
 /**
+ * Summs up elements of a given container \c c.
+ * @param c Container to summ up elements.
+ * @return Summa of the elements of \c c.
+ */
+template<typename Cont>
+inline
+int weight(Cont const & c) {
+    return std::accumulate(c.begin(), c.end(), 0);
+}
+
+template<typename PointImpl>
+struct GradedAntilexMonomialOrder {
+
+    typedef PointImpl PointImplType;
+
+    /**
+     * This total oreder predicate implements monomial order. Namely graded
+     * antilexicographic order.
+     * @param[in] lhs Left-hand side argument of “less”.
+     * @param[in] rhs Right-hand side argument of “less”.
+     * @return Result of comparison two points by current monomial order. True is
+     * \c lhs less then \c rhs, false otherwise.
+     */
+    static bool totalLess(PointImplType const & lhs, PointImplType const & rhs) {
+        int lw = weight(lhs);
+        int rw = weight(rhs);
+        return (lw < rw)
+                || (lw == rw
+                        && std::lexicographical_compare(lhs.rbegin(), lhs.rend(),
+                                rhs.rbegin(), rhs.rend()));
+    }
+
+    void inc(PointImplType & data) {
+        using namespace std::tr1::placeholders;
+        using std::tr1::bind;
+        typename PointImplType::iterator
+                itInc = std::find_if(data.begin(), data.end(),
+                    std::tr1::bind(std::logical_not<bool>(),
+                            std::tr1::bind(std::equal_to<int>(), 0, _1))),
+                it(itInc++);
+        if (it == data.end())
+            data[0] = 1;
+        else if (itInc == data.end()) {
+            int a = *it + 1;
+            *it = 0;
+            data[0] = a;
+        } else {
+            ++(*itInc);
+            int a = *it - 1;
+            *it = 0;
+            data[0] = a;
+        }
+    }
+};
+
+/**
  * Simple Point output.
  * @param[out] os Target output stream.
  * @param[in] pt Point to be outputed in \c os.
  * @return Output stream \c os after point \c p have been
  * outputed to \c os (conventionally).
  */
-template<int Dim>
+template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
-std::ostream& operator<<(std::ostream & os, Point<Dim> const & pt) {
+std::ostream& operator<<(std::ostream & os, Point<Dim, OrderPolicy> const & pt) {
     os << "( ";
     std::copy(pt.begin(), pt.end(), std::ostream_iterator<int>(os, " "));
     os << ")";
@@ -152,9 +217,11 @@ std::ostream& operator<<(std::ostream & os, Point<Dim> const & pt) {
  * @return Result of comparison two points by coordinates: true if
  * lhs[i] <= rhs[i] for all i, false otherwise.
  */
-template<int Dim>
+template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
-bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
+bool byCoordinateLess(
+        Point<Dim, OrderPolicy> const & lhs,
+        Point<Dim, OrderPolicy> const & rhs) {
     return std::inner_product(lhs.begin(), lhs.end(), rhs.begin(), true,
             std::logical_and<bool>(), std::less_equal<int>());
 }
@@ -170,14 +237,14 @@ bool byCoordinateLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
  * @return True if there exists a point pt' in [*beg, *end) such that
  * byCoordinateLess(pt, pt'), false otherwise.
  */
-template<int Dim, typename It>
+template<int Dim, template <typename PointImpl> class OrderPolicy, typename It>
 inline
-bool byCoordinateLessThenAny(Point<Dim> const & pt, It beg, It end) {
+bool byCoordinateLessThenAny(Point<Dim, OrderPolicy> const & pt, It beg, It end) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1;
     using std::tr1::cref;
     return end != std::find_if(beg, end,
-            std::tr1::bind(&byCoordinateLess<Dim>, cref(pt), _1));
+            std::tr1::bind(&byCoordinateLess<Dim, OrderPolicy>, cref(pt), _1));
 }
 
 /**
@@ -188,9 +255,9 @@ bool byCoordinateLessThenAny(Point<Dim> const & pt, It beg, It end) {
  * @return True if there exists a point pt' in \c c such that
  * byCoordinateLess(pt, pt'), false otherwise.
  */
-template<int Dim, typename PtCont>
+template<int Dim, template <typename PointImpl> class OrderPolicy, typename PtCont>
 inline
-bool byCoordinateLessThenAny(Point<Dim> const & pt, PtCont const & c) {
+bool byCoordinateLessThenAny(Point<Dim, OrderPolicy> const & pt, PtCont const & c) {
     return byCoordinateLessThenAny(pt, c.begin(), c.end());
 }
 
@@ -202,89 +269,53 @@ bool byCoordinateLessThenAny(Point<Dim> const & pt, PtCont const & c) {
  * @return True is there exists a point pt' in \c c such that
  * byCoordinateLess(pt, pt'), false otherwise.
  */
-template<int Dim, typename PtCont>
+template<int Dim, template <typename PointImpl> class OrderPolicy, typename PtCont>
 inline
-bool byCoordinateGreaterThenAny(Point<Dim> const & pt, PtCont const & c) {
+bool byCoordinateGreaterThenAny(Point<Dim, OrderPolicy> const & pt,
+        PtCont const & c) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1;
     using std::tr1::cref;
     return c.end() != std::find_if(c.begin(), c.end(),
-            bind(&byCoordinateLess<Dim>, _1, cref(pt)));
+            bind(&byCoordinateLess<Dim, OrderPolicy>, _1, cref(pt)));
 }
 
 /**
- * This total oreder predicate implements monomial order. Namely graded
- * antilexicographic order.
- * @param[in] lhs Left-hand side argument of “less”.
- * @param[in] rhs Right-hand side argument of “less”.
- * @return Result of comparison two points by current monomial order. True is
- * \c lhs less then \c rhs, false otherwise.
- */
-template<int Dim>
-inline
-bool totalLess(Point<Dim> const & lhs, Point<Dim> const & rhs) {
-    int lw = lhs.weight();
-    int rw = rhs.weight();
-    return (lw < rw)
-            || (lw == rw
-                    && std::lexicographical_compare(lhs.rbegin(), lhs.rend(),
-                            rhs.rbegin(), rhs.rend()));
-}
-
-template<int Dim>
-inline
-bool operator<(Point<Dim> const & lhs, Point<Dim> const & rhs) {
-    return totalLess(lhs, rhs);
-}
-
-/**
- * Reflexive version of \c totalLess.
+ * Reflexive version of \c operator<.
  * @param[in] lhs Left-hand side argument of “less-or-equal”.
  * @param[in] rhs Right-hand side argument of “less-or-equal”.
  * @return Result of comparison two points by current monomial order. True is
  * \c lhs less then or equal to \c rhs, false otherwise.
  */
-template<int Dim>
+template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
-bool totalLessOrEqual(Point<Dim> const & lhs, Point<Dim> const & rhs) {
-    return totalLess(lhs, rhs) || (lhs == rhs);
+bool operator<=(Point<Dim, OrderPolicy> const & lhs,
+        Point<Dim, OrderPolicy> const & rhs) {
+    return (lhs < rhs) || (lhs == rhs);
 }
 
 /**
- * Point's pre-increment following antilexicographic order.
+ * Point's pre-increment.
+ *
+ * @note Use OrderPolicy.
  */
-template<int Dim>
+template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
-Point<Dim>& Point<Dim>::operator++() {
-    using namespace std::tr1::placeholders;
-    using std::tr1::bind;
-    typename ImplType::iterator
-            itInc = std::find_if(data.begin(), data.end(),
-                std::tr1::bind(std::logical_not<bool>(),
-                        std::tr1::bind(std::equal_to<int>(), 0, _1))),
-            it(itInc++);
-    if (it == data.end())
-        data[0] = 1;
-    else if (itInc == data.end()) {
-        int a = *it + 1;
-        *it = 0;
-        data[0] = a;
-    } else {
-        ++(*itInc);
-        int a = *it - 1;
-        *it = 0;
-        data[0] = a;
-    }
+Point<Dim, OrderPolicy>&
+Point<Dim, OrderPolicy>::operator++() {
+    inc(data);
     return *this;
 }
 
 /**
- * Point's post-increment following antilexicographic order.
+ * Point's post-increment.
+ *
+ * @note Use OrderPolicy.
  */
-template<int Dim>
+template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
-Point<Dim> Point<Dim>::operator++(int) {
-    Point<Dim> old(*this);
+Point<Dim, OrderPolicy> Point<Dim, OrderPolicy>::operator++(int) {
+    Point<Dim, OrderPolicy> old(*this);
     ++*this;
     return old;
 }
@@ -292,9 +323,10 @@ Point<Dim> Point<Dim>::operator++(int) {
 /**
  * Coordinate-wise point summation.
  */
-template<int Dim>
+template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
-Point<Dim> operator+(Point<Dim> lhs, Point<Dim> const & rhs) {
+Point<Dim, OrderPolicy>
+operator+(Point<Dim, OrderPolicy> lhs, Point<Dim, OrderPolicy> const & rhs) {
     // lhs: pass-by-copy optimization
     return lhs += rhs;
 }
@@ -302,9 +334,10 @@ Point<Dim> operator+(Point<Dim> lhs, Point<Dim> const & rhs) {
 /**
  * Coordinate-wise point subtaraction.
  */
-template<int Dim>
+template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
-Point<Dim> operator-(Point<Dim> lhs, Point<Dim> const & rhs) {
+Point<Dim, OrderPolicy>
+operator-(Point<Dim, OrderPolicy> lhs, Point<Dim, OrderPolicy> const & rhs) {
     return lhs -= rhs;
 }
 
@@ -315,16 +348,18 @@ Point<Dim> operator-(Point<Dim> lhs, Point<Dim> const & rhs) {
  * @return Maximum points with respect to by-coordinate partial order
  * (cf. \c byCoordinateLess) from the \c points.
  */
-template<int Dim, template<typename T, typename S = std::allocator<T> > class Cont>
-Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim> > const & points) {
+template<int Dim, template <typename PointImpl> class OrderPolicy,
+    template<typename T, typename S = std::allocator<T> > class Cont>
+Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim, OrderPolicy> > const & points) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1; // usually we use “using” directive:
     // using namespace std::tr1::placeholders; — but here it yelds some ambiguity
     // while resolving _1 symbol, so we use declaration. Sad but true...
     using std::tr1::cref;
     using std::find_if;
-    Cont<Point<Dim> > result;
-    BOOST_FOREACH(Point<Dim> const & pt, points) {
+    Cont<Point<Dim, OrderPolicy> > result;
+    typedef Point<Dim, OrderPolicy> Pt;
+    BOOST_FOREACH(Pt const & pt, points) {
         // if there is a point in result which dominates pt, then throw pt away
         if (byCoordinateLessThenAny(pt, result))
             continue;
@@ -332,7 +367,7 @@ Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim> > const & points) {
         // in result dominated by pt
         result.erase(
                 remove_if(result.begin(), result.end(),
-                        bind(&byCoordinateLess<Dim>, _1, cref(pt))),
+                        bind(&byCoordinateLess<Dim, OrderPolicy>, _1, cref(pt))),
                 result.end());
         result.push_back(pt);
     }
@@ -345,16 +380,19 @@ Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim> > const & points) {
  * @return Maximum points with respect to by-coordinate partial order
  * (cf. \c byCoordinateLess) from the \c points.
  */
-template<int Dim, template<typename T, typename S = std::allocator<T> > class Cont>
-Cont<Point<Dim> > getPartialMinimums(Cont<Point<Dim> > const & points) {
+template<int Dim, template <typename PointImpl> class OrderPolicy,
+    template<typename T, typename S = std::allocator<T> > class Cont>
+Cont<Point<Dim, OrderPolicy> >
+getPartialMinimums(Cont<Point<Dim, OrderPolicy> > const & points) {
     // TODO: probably we should refactor out this function together with
     // getPartialMaximums to get one generic function
     using std::tr1::bind;
     using std::tr1::placeholders::_1;
     using std::tr1::cref;
     using std::find_if;
-    Cont<Point<Dim> > result;
-    BOOST_FOREACH(Point<Dim> const & pt, points) {
+    Cont<Point<Dim, OrderPolicy> > result;
+    typedef Point<Dim, OrderPolicy> Pt;
+    BOOST_FOREACH(Pt const & pt, points) {
         // if there is a point in result which dominates pt, then throw pt away
         if (byCoordinateGreaterThenAny(pt, result))
             continue;
@@ -362,15 +400,17 @@ Cont<Point<Dim> > getPartialMinimums(Cont<Point<Dim> > const & points) {
         // in result dominated by pt
         result.erase(
                 remove_if(result.begin(), result.end(),
-                        bind(&byCoordinateLess<Dim>, _1, cref(pt))),
+                        bind(&byCoordinateLess<Dim, OrderPolicy>, _1, cref(pt))),
                 result.end());
         result.push_back(pt);
     }
     return result;
 }
 
-template<int Dim, template<typename T, typename S = std::allocator<T> > class Cont>
-Cont<Point<Dim> > getConjugatePointCollection(Cont<Point<Dim> > const & points) {
+template<int Dim, template <typename PointImpl> class OrderPolicy,
+    template<typename T, typename S = std::allocator<T> > class Cont>
+Cont<Point<Dim, OrderPolicy> >
+getConjugatePointCollection(Cont<Point<Dim, OrderPolicy> > const & points) {
     // construct some finite approximation set of Sigma-set, which contains conjugate
     // point set to be found; then we use exhaustive search in this finite set for
     // finding extremums (minimums in this case) as usual (see getPartialMaximums);
@@ -386,16 +426,16 @@ Cont<Point<Dim> > getConjugatePointCollection(Cont<Point<Dim> > const & points) 
     using std::tr1::placeholders::_1;
     using std::tr1::placeholders::_2;
     if (points.empty())
-        return Cont< Point<Dim> >(1);
-    function<int (Point<Dim>)> pointWeight = bind(&Point<Dim>::weight, _1);
-    int max_weight = std::max_element(points.begin(), points.end(),
+        return Cont< Point<Dim, OrderPolicy> >(1);
+    //function<int (Point<Dim>)> pointWeight = bind(&Point<Dim>::weight, _1);
+    int max_weight = weight(*std::max_element(points.begin(), points.end(),
             std::tr1::bind(std::less<int>(),
-                    std::tr1::bind(pointWeight, _1),
-                    std::tr1::bind(pointWeight, _2)))->weight();
-    Point<Dim> upperPoint;
+                    std::tr1::bind(&weight< Point<Dim> >, _1),
+                    std::tr1::bind(&weight< Point<Dim> >, _2))));
+    Point<Dim, OrderPolicy> upperPoint;
     upperPoint[0] = max_weight + 2;
-    Cont< Point<Dim> > approxSigmaSet;
-    for (Point<Dim> i; i < upperPoint; ++i) {
+    Cont< Point<Dim, OrderPolicy> > approxSigmaSet;
+    for (Point<Dim, OrderPolicy> i; i < upperPoint; ++i) {
         if (! byCoordinateLessThenAny(i, points))
             approxSigmaSet.push_back(i);
     }
@@ -423,18 +463,18 @@ Cont<Point<Dim> > getConjugatePointCollection(Cont<Point<Dim> > const & points) 
  * @param Offset Starting index in initial point to subscript from in
  * the current slice.
  */
-template<int Dim, int Offset>
+template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
 class Slice {
-    Point<Dim> const & pt;
+    Point<Dim, OrderPolicy> const & pt;
 
 public:
-    Slice(Point<Dim> const & pt_) : pt(pt_) {}
+    Slice(Point<Dim, OrderPolicy> const & pt_) : pt(pt_) {}
 
-    Point<Dim> const & getImpl() const {return pt;}
+    Point<Dim, OrderPolicy> const & getImpl() const {return pt;}
 
-    typedef typename Point<Dim>::const_reference const_reference;
+    typedef typename Point<Dim, OrderPolicy>::const_reference const_reference;
 
-    typedef typename Point<Dim>::size_type size_type;
+    typedef typename Point<Dim, OrderPolicy>::size_type size_type;
 
     const_reference
     operator[](size_type n) const {
@@ -443,17 +483,19 @@ public:
 };
 
 /// Slice of the point is “1-slice”, for 1-slice sl[i] ~ pt[i + 1].
-template<int Dim>
-Slice<Dim, 1> make_slice(Point<Dim> const & pt) {
-    return Slice<Dim, 1>(pt);
+template<int Dim, template <typename PointImpl> class OrderPolicy>
+Slice<Dim, OrderPolicy, 1>
+make_slice(Point<Dim, OrderPolicy> const & pt) {
+    return Slice<Dim, OrderPolicy, 1>(pt);
 }
 
 /** Slice of the Slice<Dim, Offset> is Slice<Dim, Offset + 1>. It is convinient
  * for us to slice by 1 position each time.
  */
-template<int Dim, int Offset>
-Slice<Dim, Offset + 1> make_slice(Slice<Dim, Offset> const & sl) {
-    return Slice<Dim, Offset + 1>(sl.getImpl());
+template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
+Slice<Dim, OrderPolicy, Offset + 1>
+make_slice(Slice<Dim, OrderPolicy, Offset> const & sl) {
+    return Slice<Dim, OrderPolicy, Offset + 1>(sl.getImpl());
 }
 
 } // namespace mv_poly

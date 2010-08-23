@@ -151,7 +151,8 @@ public:
      * coefficient to be returned.
      * @return polynomial coefficient with point-index \c pt.
      */
-    CoefT operator[](Point<VAR_CNT> const & pt) const;
+    template<template <typename PointImpl> class OrderPolicy>
+    CoefT operator[](Point<VAR_CNT, OrderPolicy> const & pt) const;
 
     /**
      * Multiply polynomial on a scalar (assignment version).
@@ -178,7 +179,8 @@ public:
      * @param c Monomial x^{\c m} to multiply on.
      * @return This polynomial multiplyed on \c x^{\c m}.
      */
-    Polynomial operator<<=(Point<VAR_CNT> const & m);
+    template<template <typename PointImpl> class OrderPolicy>
+    Polynomial operator<<=(Point<VAR_CNT, OrderPolicy> const & m);
 
     /**
      * Multiply polynomial on a monomial represented by its degree (assignment version)
@@ -244,8 +246,9 @@ private:
      * @param sl
      * @return
      */
-    template<int Dim, int Offset>
-    CoefT operator[](Slice<Dim, Offset> const & sl) const;
+    template<int Dim, template <typename PointImpl> class OrderPolicy,
+        int Offset>
+    CoefT operator[](Slice<Dim, OrderPolicy, Offset> const & sl) const;
 
     template<typename T1, typename S, typename Pt>
     friend
@@ -259,8 +262,9 @@ private:
      * @return This polynomial with one more dimension multiplied on the next
      * initial point component pointed to by the current slice.
      */
-    template<int Dim, int Offset>
-    Polynomial operator<<=(Slice<Dim, Offset> const & m);
+    template<int Dim, template <typename PointImpl> class OrderPolicy,
+        int Offset>
+    Polynomial operator<<=(Slice<Dim, OrderPolicy, Offset> const & m);
 
     template<typename S, typename Pt>
     friend
@@ -333,8 +337,9 @@ T applySubscript(S const & el, Pt const & pt) {
 }
 
 /// When slice is maximal Slice<Dim, Dim - 1> stop slicing a point.
-template<typename T, typename S, int Dim>
-T applySubscript(S const & el, Slice<Dim, Dim - 1> const & pt) {
+template<typename T, typename S, int Dim,
+    template <typename PointImpl> class OrderPolicy>
+T applySubscript(S const & el, Slice<Dim, OrderPolicy, Dim - 1> const & pt) {
         return el[pt[0]];
 }
 
@@ -344,14 +349,16 @@ T applySubscript(S const & el, Slice<Dim, Dim - 1> const & pt) {
  * client used MVPolyType<1, T>::operator[](Point<1>) instead of operator[](int).
  * But client is always right so we cope with this correctly.
  */
-template<typename T, typename S, int Dim>
-T applySubscript(S const & el, Slice<Dim, Dim> const & pt) {
+template<typename T, typename S, int Dim,
+    template <typename PointImpl> class OrderPolicy>
+T applySubscript(S const & el, Slice<Dim, OrderPolicy, Dim> const & pt) {
         return el;
 }
 
 template<typename T>
+template<template <typename PointImpl> class OrderPolicy>
 typename Polynomial<T>::CoefT
-Polynomial<T>::operator[](Point<VAR_CNT> const & pt) const {
+Polynomial<T>::operator[](Point<VAR_CNT, OrderPolicy> const & pt) const {
     if (pt[0] < (int)0 || (int)data.size() <= pt[0])
         return CoefT();
     else
@@ -359,9 +366,9 @@ Polynomial<T>::operator[](Point<VAR_CNT> const & pt) const {
 }
 
 template<typename T>
-template<int Dim, int Offset>
+template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
 typename Polynomial<T>::CoefT
-Polynomial<T>::operator[](Slice<Dim, Offset> const & sl) const {
+Polynomial<T>::operator[](Slice<Dim, OrderPolicy, Offset> const & sl) const {
     if (sl[0] < int(0) || int(data.size()) <= sl[0])
         return CoefT();
     else
@@ -399,7 +406,7 @@ conv(
         Point<Polynomial<T>::VAR_CNT> const & m) {
     typename Polynomial<T>::CoefT res;
     Point<Polynomial<T>::VAR_CNT> i;
-    while(totalLessOrEqual(i, degf)) {
+    while(i <= degf) {
         res += f[i] * u[i + m - degf];
         ++i;
     }
@@ -515,25 +522,26 @@ void applyMonomialMultiplication(T & elem, Pt const & monomial) {
     elem <<= monomial;
 }
 
-template<typename T, int Dim>
+template<typename T, int Dim, template <typename PointImpl> class OrderPolicy>
 inline
 void applyMonomialMultiplication(
         T & elem,
-        Slice<Dim, Dim - 1> const & monomial) {
+        Slice<Dim, OrderPolicy, Dim - 1> const & monomial) {
     elem <<= monomial[0];
 }
 
-template<typename T, int Dim>
+template<typename T, int Dim, template <typename PointImpl> class OrderPolicy>
 inline
 void applyMonomialMultiplication(
         T & elem,
-        Slice<Dim, Dim> const & monomial) {
+        Slice<Dim, OrderPolicy, Dim> const & monomial) {
     return;
 }
 
 template<typename T>
+template<template <typename PointImpl> class OrderPolicy>
 inline
-Polynomial<T> Polynomial<T>::operator<<=(Point<VAR_CNT> const & monomial) {
+Polynomial<T> Polynomial<T>::operator<<=(Point<VAR_CNT, OrderPolicy> const & monomial) {
     for (typename StorageT::iterator it = data.begin(); it != data.end(); ++it)
         applyMonomialMultiplication(*it, make_slice(monomial));
     std::fill_n(std::front_inserter(data), monomial[0], ElemT());
@@ -541,9 +549,10 @@ Polynomial<T> Polynomial<T>::operator<<=(Point<VAR_CNT> const & monomial) {
 }
 
 template<typename T>
-template<int Dim, int Offset>
+template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
 inline
-Polynomial<T> Polynomial<T>::operator<<=(Slice<Dim, Offset> const & monomial) {
+Polynomial<T>
+Polynomial<T>::operator<<=(Slice<Dim, OrderPolicy, Offset> const & monomial) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1;
     for (typename StorageT::iterator it = data.begin(); it != data.end(); ++it)

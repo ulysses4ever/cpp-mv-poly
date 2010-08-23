@@ -35,34 +35,36 @@ std::ostream& operator<<(std::ostream & os, std::pair<T1, T2> const & p) {
 }
 }
 
-template<typename PolynomialT>
+template<typename PolynomialT,
+    template <typename PointImpl> class OrderPolicy = GradedAntilexMonomialOrder>
 class BMSAlgorithm {
+public:
     static const int Dim = PolynomialT::VAR_CNT;
 
-    typedef std::list< Point<Dim> > PointCollection;
-
-public:
-    typedef std::map< Point<Dim>, PolynomialT > PointPolyMap;
+    typedef std::map< Point<Dim, OrderPolicy>, PolynomialT > PointPolyMap;
 
 private:
+    typedef std::list< Point<Dim, OrderPolicy> > PointCollection;
+
     PointPolyMap F, G;
 
     typedef typename PolynomialT::CoefT CoefT;
 
     static const CoefT ZERO;// = CoefT();
 
-    typedef std::map< Point<Dim>, CoefT > PointCoefMap;
+    typedef std::map< Point<Dim, OrderPolicy>, CoefT > PointCoefMap;
 
     PolynomialT const & seq;
 
-    Point<Dim> seqLen;
+    Point<Dim, OrderPolicy> seqLen;
 
 public:
 
     typedef std::list< PolynomialT > PolynomialCollection;
 
-    BMSAlgorithm(PolynomialT const & seq_, Point<Dim> const & seqLen_) :
-            seq(seq_), seqLen(seqLen_)  {
+    BMSAlgorithm(PolynomialT const & seq_,
+            Point<Dim, OrderPolicy> const & seqLen_) :
+                                                seq(seq_), seqLen(seqLen_)  {
         F.insert(std::make_pair(Point<Dim>(), PolynomialT::getId()));
     }
 
@@ -138,7 +140,7 @@ public:
                 Point<Dim> s = *(std::find_if(
                         make_choose_point_iterator(F.begin()),
                         make_choose_point_iterator(F.end()),
-                        bind(&byCoordinateLess<Dim>, _1, cref(t))));
+                        bind(&byCoordinateLess<Dim, OrderPolicy>, _1, cref(t))));
                 Point<Dim> u = t - s; // valid Point as true == byCoordinateLess(s, t)
 //                cout << "t: " << t << " ";
 //                cout << "s: " << s << " ";
@@ -151,7 +153,7 @@ public:
                     const typename PointPolyMap::const_iterator cIt = (std::find_if(
                             make_choose_point_iterator(G.begin()),
                             make_choose_point_iterator(G.end()),
-                            bind(&byCoordinateLess<Dim>, cref(k - t), _1))
+                            bind(&byCoordinateLess<Dim, OrderPolicy>, cref(k - t), _1))
                             ).base();
                     if ((notJustIncreaseDegree = (cIt != G.end()))) {
                         // yes, I mean assignment at the top of if condition
@@ -214,8 +216,16 @@ private:
     }
 };
 
-template<typename T>
-const typename BMSAlgorithm<T>::CoefT BMSAlgorithm<T>::ZERO =
-        typename BMSAlgorithm<T>::CoefT();
+template<typename T, template <typename PointImpl> class OrderPolicy>
+const typename BMSAlgorithm<T, OrderPolicy>::CoefT
+BMSAlgorithm<T, OrderPolicy>::ZERO =
+        typename BMSAlgorithm<T, OrderPolicy>::CoefT();
+
+template<typename PolynomialT, template <typename PointImpl> class OrderPolicy>
+BMSAlgorithm<PolynomialT, OrderPolicy>
+make_bmsalgorithm(PolynomialT const & seq,
+        Point<BMSAlgorithm<PolynomialT, OrderPolicy>::Dim, OrderPolicy> const & seqLen) {
+    return BMSAlgorithm<PolynomialT, OrderPolicy>(seq, seqLen);
+}
 
 #endif /* BMSA_HPP_ */
