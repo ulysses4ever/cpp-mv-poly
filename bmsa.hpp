@@ -219,7 +219,7 @@ private:
 template<typename T, template <typename PointImpl> class OrderPolicy>
 const typename BMSAlgorithm<T, OrderPolicy>::CoefT
 BMSAlgorithm<T, OrderPolicy>::ZERO =
-        typename BMSAlgorithm<T, OrderPolicy>::CoefT();
+    CoefficientTraits<typename BMSAlgorithm<T, OrderPolicy>::CoefT>::addId();
 
 template<typename PolynomialT, template <typename PointImpl> class OrderPolicy>
 BMSAlgorithm<PolynomialT, OrderPolicy>

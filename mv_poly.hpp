@@ -93,8 +93,7 @@ public:
     friend
     void TestMVPoly::outputTest();
 
-    Polynomial() : data(1) /* no-argument constructor
-                                    for data element means 0 */ {}
+    Polynomial() : data(1, CoefficientTraits<ElemT>::addId()) {}
 
     explicit Polynomial(std::string const & s) {
         loadPolyFromString(*this, s );
@@ -354,7 +353,7 @@ template<template <typename PointImpl> class OrderPolicy>
 typename Polynomial<T>::CoefT
 Polynomial<T>::operator[](Point<VAR_CNT, OrderPolicy> const & pt) const {
     if (pt[0] < (int)0 || (int)data.size() <= pt[0])
-        return CoefT();
+        return CoefficientTraits<CoefT>::addId();
     else
         return applySubscript<Polynomial<T>::CoefT>(data[pt[0]], make_slice(pt));
 }
@@ -364,7 +363,7 @@ template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
 typename Polynomial<T>::CoefT
 Polynomial<T>::operator[](Slice<Dim, OrderPolicy, Offset> const & sl) const {
     if (sl[0] < int(0) || int(data.size()) <= sl[0])
-        return CoefT();
+        return CoefficientTraits<CoefT>::addId();
     else
         return applySubscript<Polynomial<T>::CoefT>(data[sl[0]], make_slice(sl));
 }
@@ -373,7 +372,7 @@ template<typename T>
 typename Polynomial<T>::CoefT
 Polynomial<T>::operator[](int pt) const {
     if (pt < (int)0 || (int)data.size() <= pt)
-        return CoefT();
+        return CoefficientTraits<CoefT>::addId();
     else
         return data[pt];
 }

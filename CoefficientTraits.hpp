@@ -33,6 +33,10 @@ struct DefaultCoefficientTraits {
     static CoefT multId() {
         return 1;
     }
+
+    static CoefT addId() {
+        return CoefT();
+    }
 };
 
 template<typename T>
@@ -49,6 +53,11 @@ struct NtlCoefficientTraits {
         static T a;
         clear(a);
         return a;
+    }
+
+    static T addId() {
+        static T zero;
+        return zero;
     }
 };
 

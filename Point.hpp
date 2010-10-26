@@ -32,7 +32,7 @@ template<
     int Dim,
     template <typename PointImpl> class OrderPolicy
         = GradedAntilexMonomialOrder>
-class Point : public OrderPolicy< std::tr1::array<int, Dim> > {
+class Point : OrderPolicy< std::tr1::array<int, Dim> > {
 
     typedef typename Point::PointImplType ImplType; // PointImplType inherited
                                             // from GradedAntilexMonomialOrder
