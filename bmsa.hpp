@@ -11,6 +11,7 @@
 #define BMSA_HPP_
 
 #include <iostream>
+#include <iomanip>
 #include <iterator>
 #include <list>
 #include <map>
@@ -35,8 +36,10 @@ std::ostream& operator<<(std::ostream & os, std::pair<T1, T2> const & p) {
 }
 }
 
-template<typename PolynomialT,
-    template <typename PointImpl> class OrderPolicy = GradedAntilexMonomialOrder>
+template<
+    typename PolynomialT,
+    template <typename PointImpl> class OrderPolicy = GradedAntilexMonomialOrder
+>
 class BMSAlgorithm {
 public:
     static const int Dim = PolynomialT::VAR_CNT;
@@ -50,7 +53,7 @@ private:
 
     typedef typename PolynomialT::CoefT CoefT;
 
-    static const CoefT ZERO;// = CoefT();
+    const CoefT ZERO;
 
     typedef std::map< Point<Dim, OrderPolicy>, CoefT > PointCoefMap;
 
@@ -64,7 +67,8 @@ public:
 
     BMSAlgorithm(PolynomialT const & seq_,
             Point<Dim, OrderPolicy> const & seqLen_) :
-                                                seq(seq_), seqLen(seqLen_)  {
+                ZERO(CoefficientTraits<CoefT>::addId()),
+                seq(seq_), seqLen(seqLen_)  {
         F.insert(std::make_pair(Point<Dim>(), PolynomialT::getId()));
     }
 
@@ -216,16 +220,68 @@ private:
     }
 };
 
-template<typename T, template <typename PointImpl> class OrderPolicy>
-const typename BMSAlgorithm<T, OrderPolicy>::CoefT
-BMSAlgorithm<T, OrderPolicy>::ZERO =
-    CoefficientTraits<typename BMSAlgorithm<T, OrderPolicy>::CoefT>::addId();
+//template<typename T, template <typename PointImpl> class OrderPolicy>
+//const typename BMSAlgorithm<T, OrderPolicy>::CoefT
+//BMSAlgorithm<T, OrderPolicy>::ZERO =
+//    CoefficientTraits<typename BMSAlgorithm<T, OrderPolicy>::CoefT>::addId();
 
 template<typename PolynomialT, template <typename PointImpl> class OrderPolicy>
 BMSAlgorithm<PolynomialT, OrderPolicy>
 make_bmsalgorithm(PolynomialT const & seq,
         Point<BMSAlgorithm<PolynomialT, OrderPolicy>::Dim, OrderPolicy> const & seqLen) {
     return BMSAlgorithm<PolynomialT, OrderPolicy>(seq, seqLen);
+}
+
+bool defPointsOrder(Point<2> const & lhs, Point<2> const & rhs) {
+    return lhs[0] < rhs[0] && lhs[1] > rhs[1];
+}
+
+template<typename CoefT>
+std::list< Point<2> > getOrderedDefPoints(
+        typename BMSAlgorithm<
+            typename MVPolyType<2, CoefT>::type
+        >::PointPolyMap const & ppmap) {
+    typedef typename BMSAlgorithm<
+                typename MVPolyType<2, CoefT>::type
+            >::PointPolyMap::value_type map_value_type;
+    using namespace std::tr1::placeholders;
+    std::list< Point<2> > result;
+    transform(
+            ppmap.begin(),
+            ppmap.end(),
+            std::back_inserter(result),
+            std::tr1::bind( &map_value_type::first, _1 )
+    );
+    result.sort(defPointsOrder);
+    return result;
+}
+
+void printOrderedDefPoints(std::list< Point<2> > const & points) {
+    if (points.empty())
+        return;
+    using std::cout;
+    using std::endl;
+    using std::setw;
+
+    cout << setw(4) << "";
+    for (int i = 0; i != (*points.begin())[1] + 1; ++i) {
+        cout << setw(2) << i;
+    }
+    cout << endl;
+    cout << setw(4) << "";
+    for (int i = 0; i != (*points.begin())[1] + 1; ++i) {
+        cout << "__";
+    }
+    cout << endl;
+
+    std::list< Point<2> >::const_iterator it = points.begin();
+    const int end = (*--points.end())[0] + 1;
+    for (int i = 0; i != end; ++i) {
+        cout << setw(2) << i << " | ";
+        if ((*it)[0] == i)
+            cout << std::string((*it++)[1] * 2 + 1, '~') << "+";
+        cout << endl;
+    }
 }
 
 #endif /* BMSA_HPP_ */

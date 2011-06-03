@@ -50,13 +50,13 @@ struct NtlCoefficientTraits {
     }
 
     static T multId() {
-        static T a;
-        clear(a);
+        T a;
+        NTL::set(a);
         return a;
     }
 
     static T addId() {
-        static T zero;
+        T zero;
         return zero;
     }
 };

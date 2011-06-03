@@ -92,7 +92,7 @@ void polySubscript() {
     Point<2> i, pt;
     pt[0] = 2; pt[1] = 1;
     ostringstream os;
-    for ( ; totalLess(i, pt); ++i) {
+    for ( ; i < pt; ++i) {
         os << p[i] << " ";
     }
     ASSERT_EQUAL("0 1 1 0 0 0 1 ", os.str());
@@ -110,17 +110,17 @@ void pointComparison() {
     Point<2> pt4, pt5;
     pt4[0] = 1; pt4[1] = 0;
     pt5[0] = 0; pt5[1] = 1;
-    ASSERT(totalLess(pt4, pt5)); // less by antilex
-    ASSERT(!totalLess(pt5, pt4));
+    ASSERT(pt4 < pt5); // less by antilex
+    ASSERT(!(pt5 < pt4));
     pt5[0] = 2; pt5[1] = 0;
-    ASSERT(totalLess(pt4, pt5)); // less by grading
-    ASSERT(!totalLess(pt5, pt4));
+    ASSERT(pt4 < pt5); // less by grading
+    ASSERT(!(pt5 < pt4));
 
-    ASSERT(!totalLess(pt5, pt5));
+    ASSERT(!(pt5 < pt5));
 
     pt4[0] = 0; pt4[1] = 1;
-    ASSERT(totalLess(pt4, pt5));
-    ASSERT(!totalLess(pt5, pt4));
+    ASSERT(pt4 < pt5);
+    ASSERT(!(pt5 < pt4));
 }
 
 void pointIncreasing() {
@@ -291,6 +291,8 @@ void sakatasExamples() {
             "[[[1 0] [0 0] [1] [1]] [[0 0] [0] [0]] [[1] [1]] [[0]]]\n",
             os.str());
 }
+
+
 
 void runSuite(){
     cute::suite PolyIOSuite;

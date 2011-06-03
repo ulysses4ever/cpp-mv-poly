@@ -16,10 +16,15 @@
 #include <string>
 #include <typeinfo>
 #include <utility>
+#include <vector>
+
+#include <cmath>
 
 #include <tr1/functional>
 
 #include <NTL/GF2.h>
+#include <NTL/GF2X.h>
+#include <NTL/GF2E.h>
 
 #include "mv_poly.hpp"
 #include "Point.hpp"
@@ -35,31 +40,418 @@ using namespace mv_poly;
 
 using namespace std;
 
+#define ARR_LEN(arr) (sizeof(arr) / sizeof(*(arr)))
+
+void testCoxEtAl05();
+void testSakataEtAl95();
+void testField();
+template<typename F>
+void printFieldInPowers(F const & x, int field_size);
+
 int main() {
-    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
-    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
+    //testCoxEtAl05();
+//    testSakataEtAl95();
+    testField();
+}
+
+template<typename PolyT>
+PolyT load_coefs(typename PolyT::CoefT const * coefs[], size_t len, size_t * coefsLens) {
+    typename PolyT::StorageT stor;
+    typedef typename PolyT::ElemT ElemT;
+    for (size_t i = 0; i < len; ++i) {
+        ElemT elem;
+        elem.setCoefs(typename ElemT::StorageT(
+                coefs[i], coefs[i] + coefsLens[i]));
+        stor.push_back(elem);
+    }
+    PolyT res;
+    res.setCoefs(stor);
+    return res;
+}
+
+template<typename F>
+struct NTLPrimeFieldTtraits {
+    typedef NTL::ZZ_pE ExtField;
+    typedef NTL::ZZ_pX PolyOver;
+
+    // assuming p from ZZ_p fits int
+    static int Char() {return NTL::to_int(F::modulus());}
+};
+
+template<>
+struct NTLPrimeFieldTtraits<NTL::GF2> {
+    typedef NTL::GF2E ExtField;
+    typedef NTL::GF2X PolyOver;
+
+    static int Char() {return 2;}
+};
+
+
+/**
+ *
+ * @param polyExtStr Строковое представление неприводимого полинома
+ * для построения расширенного поля.
+ * @return Размер расширенного поля.
+ */
+template<typename F>
+size_t initExtendedField(
+        string const & polyExtStr) {
+    typename NTLPrimeFieldTtraits<F>::PolyOver p;
+    std::istringstream is(polyExtStr);
+    is >> p;
+    typedef typename NTLPrimeFieldTtraits<F>::ExtField EF;
+    EF::init(p);
+    return pow(NTLPrimeFieldTtraits<F>::Char(), deg(p));
+}
+
+template<typename ExtF>
+ExtF getPrimitive() {
+    std::istringstream is("[0 1]");
+    ExtF x;
+    is >> x;
+    return x;
+}
+
+/**
+ *
+ * @param x Field primitive element.
+ * @param field_size Number of elements in the field.
+ */
+template<typename F>
+void printFieldInPowers(F const & x, size_t field_size) {
+    for (size_t i = 0; i < field_size - 1; ++i)
+        cout << "a^" << i << " = " << power(x, i) << endl;
+    cout << endl;
+}
+
+typedef MVPolyType<2, NTL::GF2E>::ResultT PolyT;
+PolyT sakataEtAl05Seq(NTL::GF2E const & x) {
+    // prepare raw coefficient arrays for reference sequence
+    using NTL::GF2E;
+    using NTL::power;
+    GF2E coefs0[] = {
+            power(x, 9), GF2E(), power(x, 9), power(x, 6), power(x, 5),
+            power(x, 6)
+    };
+    GF2E coefs1[] = {
+            power(x, 14), power(x, 9), power(x, 11), power(x, 4), power(x, 7)
+    };
+    GF2E coefs2[] = {
+            power(x, 5), power(x, 14), GF2E(), power(x, 7)
+    };
+    GF2E coefs3[] = {
+            power(x, 7), power(x, 12), power(x, 12)
+    };
+    GF2E coefs4[] = {
+            power(x, 2), power(x, 5)
+    };
+    GF2E coefs5[] = {
+            power(x, 5), power(x, 5)
+    };
+    GF2E coefs6[] = {
+            power(x, 0)
+    };
+    GF2E const * coefs[] = {coefs0, coefs1, coefs2, coefs3, coefs4, coefs5, coefs6};
+    size_t coefsLens[] = {
+            ARR_LEN(coefs0), ARR_LEN(coefs1), ARR_LEN(coefs2),
+            ARR_LEN(coefs3), ARR_LEN(coefs4), ARR_LEN(coefs5), ARR_LEN(coefs6)
+    };
+
+    // load reference sequence
+    return load_coefs<PolyT>(coefs, ARR_LEN(coefs), coefsLens);
+}
+
+void testField() {
+    //init field
+    typedef NTL::GF2 PrimeField;
+    typedef typename NTLPrimeFieldTtraits<PrimeField>::ExtField ExtField;
+    size_t field_size = initExtendedField<PrimeField>("[1 1 0 0 1]");
+    //cout << field_size;
+
+    // primitive element
+    ExtField x = getPrimitive<ExtField>();
+
+    printFieldInPowers(x, field_size);
+    MVPolyType<2, ExtField>::type u = sakataEtAl05Seq(x);
     Point<2> pt;
-    pt[0] = 4; pt[1] = 1;
-    BMSAlgorithm< PolyT > alg(u, pt);
-    BMSAlgorithm< PolyT >::PolynomialCollection minset2 = alg.computeMinimalSet();
+    pt[0] = 1; pt[1] = 4;
+    cout << u[pt] << endl;
+    ExtField a = u[pt];
+    pt[1] = 1;
+    cout << u[pt] << endl;
+    cout << a + u[pt] << endl;
+}
+
+void testCoxEtAl05() {
+
+    //init field
+    typedef NTL::GF2 PrimeField;
+    typedef typename NTLPrimeFieldTtraits<PrimeField>::ExtField ExtField;
+    size_t field_size = initExtendedField<PrimeField>("[1 1 1]");
+    //cout << field_size;
+
+    // primitive element
+    ExtField x = getPrimitive<ExtField>();
+
+    // prepare coefs for reference sequence
+    ExtField coefs0[] = {
+            ExtField::zero(), x
+    };
+    ExtField coefs1[] = {
+            power(x, 2), x
+    };
+    ExtField coefs2[] = {
+            x
+    };
+    ExtField const * coefs[] = {coefs0, coefs1, coefs2};
+    size_t coefsLens[] = {
+            ARR_LEN(coefs0), ARR_LEN(coefs1), ARR_LEN(coefs2)
+    };
+
+    // load reference sequence
+    const int dim = 2;
+    typedef MVPolyType<dim, ExtField>::ResultT PolyT;
+    PolyT u = load_coefs<PolyT>(coefs, ARR_LEN(coefs), coefsLens);
+
+    // need to manually set sequence length
+    Point<2> ulen;
+    ulen[0] = 0; ulen[1] = 2;
+
+    // print reference sequence
+    //cout << u << endl;
+
+    // run algorithm
+    BMSAlgorithm< PolyT > alg(u, ulen);
+    BMSAlgorithm< PolyT >::PolynomialCollection minset = alg.computeMinimalSet();
     BMSAlgorithm< PolyT >::PointPolyMap F = alg.getF();
-    copy(minset2.begin(), minset2.end(), std::ostream_iterator<PolyT>(cout, "\n"));
 
-    Point<3> ptt;
-    ptt[0] = 5; ptt[1] = 0; ptt[2] = 1;
-    typedef MVPolyType<3, NTL::GF2>::ResultT PolyT3;
-    PolyT3 v(
-            "[[[1 1 1 1 0 0] [0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]"//x = 0
-            "[[1 1 0 1 1] [1 0 1 1] [0 1 1] [1 1] [1] [0]]" // x = 1
-            "[[0 1 0 0] [0 0 1] [0 0] [1] [0]]" // x = 2
-            "[[1 1 0] [1 0] [0] [1]] [[1 1] [0] [1]] [[1] [1]] [[0]]]" // x = 3-6
-            );
-    BMSAlgorithm< PolyT3 > alg3(v, ptt);
-    BMSAlgorithm< PolyT3 >::PolynomialCollection minset = alg3.computeMinimalSet();
-    //BMSAlgorithm< PolyT3 >::PointPolyMap F3 = alg3.getF();
+    // print algo result
+    cout << endl << "copmuted res:" << endl;
+    copy(minset.begin(), minset.end(),
+                std::ostream_iterator<PolyT>(cout, "\n"));
+    // [[[1] [1]] [[1 1]]]  ~ x_2 + (a^2)x_1 + 1
+    // [[[]] [[1 1]] [[1]]] ~ (x_1)^2 + (a^2)x_1
 
-    copy(minset.begin(), minset.end(), std::ostream_iterator<
-            BMSAlgorithm< PolyT3 >::PolynomialCollection::value_type>(cout, "\n"));
+
+}
+
+
+
+void testSakataEtAl95() {
+    std::istringstream is("[1 1 0 0 1]"); // deg = 4
+    const size_t field_size = 16;
+    NTL::GF2X irr;
+    is >> irr;
+//    cout << irr << endl;
+    NTL::GF2E::init(irr);
+
+    is.str("[0 1]");
+    NTL::GF2E x;
+    using std::cout;
+    using std::endl;
+//    std::cout << "No-arg ctor of GF2: " << x << endl;
+    is >> x;
+//    cout << x << endl;
+
+    // print F^*
+
+
+//    cout << "f[u]_m = "
+//        << power(x, 5) + power(x, 12) + power(x, 4) + power(x, 9) << endl << endl;
+
+    // store F as powers of primitive
+//    NTL::GF2E powers[field_size];
+//    powers[0] = NTL::GF2E();
+//    for (size_t i = 1; i < field_size; ++i)
+//        powers[i] = power(x, i);
+
+
+    // prepare raw coefficient arrays for reference sequence
+//    using NTL::GF2E;
+//    using NTL::power;
+//    GF2E coefs0[] = {
+//            power(x, 9), GF2E(), power(x, 9), power(x, 6), power(x, 5),
+//            power(x, 6)
+//    };
+//    GF2E coefs1[] = {
+//            power(x, 14), power(x, 9), power(x, 11), power(x, 4), power(x, 7)
+//    };
+//    GF2E coefs2[] = {
+//            power(x, 5), power(x, 14), GF2E(), power(x, 7)
+//    };
+//    GF2E coefs3[] = {
+//            power(x, 7), power(x, 12), power(x, 12)
+//    };
+//    GF2E coefs4[] = {
+//            power(x, 2), power(x, 5)
+//    };
+//    GF2E coefs5[] = {
+//            power(x, 5), power(x, 5)
+//    };
+//    GF2E coefs6[] = {
+//            power(x, 0)
+//    };
+//    GF2E const * coefs[] = {coefs0, coefs1, coefs2, coefs3, coefs4, coefs5, coefs6};
+//    size_t coefsLens[] = {
+//            ARR_LEN(coefs0), ARR_LEN(coefs1), ARR_LEN(coefs2),
+//            ARR_LEN(coefs3), ARR_LEN(coefs4), ARR_LEN(coefs5), ARR_LEN(coefs6)
+//    };
+//
+//    // load reference sequence
+    typedef MVPolyType<2, NTL::GF2E>::ResultT PolyT;
+    PolyT u = sakataEtAl05Seq(x); //load_coefs<PolyT>(coefs, ARR_LEN(coefs), coefsLens);
+    Point<2> ulen;
+    //ulen[0] = 4; ulen[1] = 2;
+    ulen[0] = 5; ulen[1] = 1;
+    //u.setCoefs(stor);
+    cout << u << endl;
+
+    PolyT expected_res3;
+    std::list<PolyT> expected_res;
+    {   // expected res
+
+        PolyT expected;
+        std::ostringstream oss;
+        std::istringstream iss;
+
+        oss.str("");
+        oss
+                << '['
+                    << '['
+                        << power(x, 11) << ' ' << power(x, 13) << ' ' << power(x, 0)
+                    << ']'
+                    << '['
+                        << power(x, 13) << ' ' << power(x, 10)
+                    << ']'
+                << ']';
+        iss.str(oss.str());
+        iss >> expected;
+        expected_res.push_back(expected);
+
+        expected_res3 = expected;
+
+        oss.str("");
+        oss
+                << '['
+                    << '['
+                        << power(x, 4) << ' ' << power(x, 1)
+                    << ']'
+                    << '['
+                        << power(x, 7) << ' ' << power(x, 4)
+                    << ']'
+                    << '['
+                        << power(x, 3) << ' ' << power(x, 0)
+                    << ']'
+                << ']';
+        iss.str(oss.str());
+        iss >> expected;
+        expected_res.push_back(expected);
+
+        oss.str("");
+        oss
+                << '['
+                    << '['
+                        << power(x, 1) << ' ' << power(x, 11)
+                    << ']'
+                    << '['
+                        << power(x, 1) << ' ' << power(x, 0)
+                    << ']'
+                    << '['
+                        << power(x, 4) << ' ' << power(x, 9)
+                    << ']'
+                    << '['
+                        << power(x, 3)
+                    << ']'
+                    << '['
+                        << power(x, 0)
+                    << ']'
+                << ']';
+        iss.str(oss.str());
+        iss >> expected;
+        expected_res.push_back(expected);
+    }
+
+//    cout <<  endl <<  endl;
+    //    cout << CoefficientTraits<GF2E>::addId() << endl;
+//    cout << CoefficientTraits<GF2E>::multId() << endl;
+//    cout << CoefficientTraits<NTL::GF2>::addId() << endl;
+//    cout << CoefficientTraits<NTL::GF2>::multId() << endl;
+//    GF2E zero;
+//    NTL::clear(zero);
+//    cout << zero << endl;
+
+    BMSAlgorithm< PolyT > alg(u, ulen);
+    BMSAlgorithm< PolyT >::PolynomialCollection minset = alg.computeMinimalSet();
+    BMSAlgorithm< PolyT >::PointPolyMap F = alg.getF();
+
+    //assert(expected_res == minset);
+    cout << "expected res:" << endl;
+    copy(expected_res.begin(), expected_res.end(),
+            std::ostream_iterator<PolyT>(cout, "\n"));
+//    std::vector<int> expectes_res_powers;
+//    transform(expected_res.begin(), expected_res.end(),
+//            back_inserter(expectes_res_powers),
+//            unmap_each(powers, field_size));
+//    copy(expected_res.begin(), expected_res.end(),
+//            std::ostream_iterator<PolyT>(cout, "\n"));
+
+    cout << endl << "copmuted res:" << endl;
+    copy(minset.begin(), minset.end(),
+                std::ostream_iterator<PolyT>(cout, "\n"));
+
+    // print all convolutions u * expected - should be 0's
+    {
+        PolyT poly =  minset.back();
+        Point<2> deg_poly;
+        deg_poly[0] = 4; deg_poly[1] = 0;
+        for (Point<2> k = deg_poly; k < ulen; ++k) {
+            if (byCoordinateLess(deg_poly, k))
+                cout << "k = " << k << ", conv(f, u, k) = "
+                    << conv(expected_res3, u, deg_poly, k) << endl;
+        }
+        cout << endl;
+    }
+
+    BMSAlgorithm< PolyT >::PolynomialCollection::const_iterator it = minset.begin();
+    list<PolyT>::const_iterator it_exp = expected_res.begin();
+    assert(*it++ == *it_exp++);
+    assert(*it++ == *it_exp++);
+//    assert(*it++ == *it_exp++);
+    //assert(minset2 == expected_res);
+//    copy(F.begin(), F.end(), std::ostream_iterator<
+//            BMSAlgorithm< PolyT >::PointPolyMap::value_type>(cout, "\n"));
+//    cout << *it << endl;
+//    cout << *it_exp << endl;
+    //printOrderedDefPoints(getOrderedDefPoints<NTL::GF2E>(F));
+
+
+//    copy(minset2.begin(), minset2.end(), std::ostream_iterator<PolyT>(cout, "\n"));
+}
+
+//    typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
+//    PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
+//    Point<2> pt;
+//    pt[0] = 4; pt[1] = 1;
+//    BMSAlgorithm< PolyT > alg(u, pt);
+//    BMSAlgorithm< PolyT >::PolynomialCollection minset2 = alg.computeMinimalSet();
+//    BMSAlgorithm< PolyT >::PointPolyMap F = alg.getF();
+//    copy(minset2.begin(), minset2.end(), std::ostream_iterator<PolyT>(cout, "\n"));
+//
+//    Point<3> ptt;
+//    ptt[0] = 5; ptt[1] = 0; ptt[2] = 1;
+//    typedef MVPolyType<3, NTL::GF2>::ResultT PolyT3;
+//    PolyT3 v(
+//            "[[[1 1 1 1 0 0] [0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]"//x = 0
+//            "[[1 1 0 1 1] [1 0 1 1] [0 1 1] [1 1] [1] [0]]" // x = 1
+//            "[[0 1 0 0] [0 0 1] [0 0] [1] [0]]" // x = 2
+//            "[[1 1 0] [1 0] [0] [1]] [[1 1] [0] [1]] [[1] [1]] [[0]]]" // x = 3-6
+//            );
+//    BMSAlgorithm< PolyT3 > alg3(v, ptt);
+//    BMSAlgorithm< PolyT3 >::PolynomialCollection minset = alg3.computeMinimalSet();
+//    //BMSAlgorithm< PolyT3 >::PointPolyMap F3 = alg3.getF();
+//
+//    copy(minset.begin(), minset.end(), std::ostream_iterator<
+//            BMSAlgorithm< PolyT3 >::PolynomialCollection::value_type>(cout, "\n"));
 
     //    Point<3> degf;
 //    degf[0] = 0; degf[1] = 0; degf[2] = 3;
@@ -220,5 +612,3 @@ int main() {
 //        cout << pt << endl;
 //        increase(pt);
 //    }
-
-}

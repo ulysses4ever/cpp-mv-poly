@@ -202,9 +202,9 @@ struct GradedAntilexMonomialOrder {
 template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
 std::ostream& operator<<(std::ostream & os, Point<Dim, OrderPolicy> const & pt) {
-    os << "( ";
-    std::copy(pt.begin(), pt.end(), std::ostream_iterator<int>(os, " "));
-    os << ")";
+    os << "(";
+    std::copy(pt.begin(), pt.end(), std::ostream_iterator<int>(os, ","));
+    os /*<< *pt.end()--*/ << ")";
     return os;
 }
 

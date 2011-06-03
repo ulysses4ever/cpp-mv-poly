@@ -23,6 +23,8 @@
 #include <string>
 #include <typeinfo>
 
+#include <cassert>
+
 #include <tr1/functional>
 
 #include "Point.hpp"
@@ -46,6 +48,8 @@ class Polynomial;
 template<int VarCnt, typename Coef>
 struct MVPolyType {
     typedef Polynomial<typename MVPolyType<VarCnt - 1, Coef>::ResultT> ResultT;
+
+    typedef ResultT type; // result as in Boost.MPL
 };
 
 /// \cond
@@ -55,6 +59,8 @@ template<typename Coef>
 struct MVPolyType<1, Coef> {
     // multivariate polynomial from 1 variable is just Polynomial
     typedef Polynomial<Coef> ResultT;
+
+    typedef ResultT type; // result as in Boost.MPL
 };
 /// \endcond
 
@@ -210,7 +216,8 @@ public:
     inline
     bool operator==(Polynomial<S> const & lhs, Polynomial<S> const & rhs);
 
-    /** As polynomial is actually a special container type, it has distinguished
+    /**
+     * As polynomial is actually a special container type, it has distinguished
      * type for it's elements.
      */
     typedef T                   ElemT;
@@ -219,10 +226,14 @@ public:
 
     StorageT const & getCoefs() const     { return data; }
 
+    void setCoefs(StorageT const & data)  { this->data = data; }
+
     static Polynomial getId() {
         std::string strRep;
         std::fill_n(std::back_inserter(strRep), VAR_CNT, '[');
-        strRep.push_back('1');
+        std::ostringstream elemId;
+        elemId << CoefficientTraits<CoefT>::multId();
+        strRep += elemId.str();
         std::fill_n(std::back_inserter(strRep), VAR_CNT, ']');
         return Polynomial(strRep);
     }
@@ -283,8 +294,6 @@ private:
         data.erase(it, data.end());
     }
 
-    void setCoefs(StorageT const & data)  { this->data = data; }
-
     StorageT data;
 };
 
@@ -295,6 +304,12 @@ bool operator==(Polynomial<T> const & lhs, Polynomial<T> const & rhs) {
        const_cast<Polynomial<T> &>(rhs).normalization();
        // yep, I know, that every time I use const_cast God kills a kitten
        return lhs.data == rhs.data;
+}
+
+template<typename T>
+inline
+bool operator!=(Polynomial<T> const & lhs, Polynomial<T> const & rhs) {
+    return !(lhs == rhs);
 }
 
 /// \cond
@@ -397,9 +412,13 @@ conv(
         Polynomial<T> const & u,
         Point<Polynomial<T>::VAR_CNT> const & degf,
         Point<Polynomial<T>::VAR_CNT> const & m) {
+    assert( byCoordinateLess(degf, m) );
     typename Polynomial<T>::CoefT res;
     Point<Polynomial<T>::VAR_CNT> i;
     while(i <= degf) {
+        using namespace std;
+//        cout << i << " " << f[i] << " " << u[i + m - degf]
+//                                             << f[i] * u[i + m - degf] << endl;
         res += f[i] * u[i + m - degf];
         ++i;
     }
