@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <list>
+#include <map>
+#include <iterator>
 #include <string>
 #include <sstream>
 
@@ -292,6 +294,17 @@ void sakatasExamples() {
             os.str());
 }
 
+void testPolyToDegCoefMapConversion() {
+    using namespace std;
+    Polynomial<int> p;
+    istringstream iss("[3 2 3]");
+    iss >> p;
+    auto res = polyToDegCoefMap< Point<1> >(p);
+    typedef decltype(res) DegCoefMap;
+    ostringstream os;
+    copy(res.begin(), res.end(), ostream_iterator<DegCoefMap::value_type>(os, ", "));
+    ASSERT_EQUAL("(0, 3), (1, 2), (2, 3), ", os.str());
+}
 
 
 void runSuite(){
@@ -301,6 +314,7 @@ void runSuite(){
     PolyIOSuite.push_back(CUTE(inputTestForNPoly));
     PolyIOSuite.push_back(CUTE(inputTestForNPolyOverGF));
     PolyIOSuite.push_back(CUTE(polySubscript));
+    PolyIOSuite.push_back(CUTE(testPolyToDegCoefMapConversion));
     cute::ide_listener lis;
     cute::makeRunner(lis)(PolyIOSuite, "The Polynomial Input-Output Suite");
 

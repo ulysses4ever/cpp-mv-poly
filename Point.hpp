@@ -209,6 +209,20 @@ std::ostream& operator<<(std::ostream & os, Point<Dim, OrderPolicy> const & pt) 
 }
 
 /**
+ * Simple 1-dimensional point output.
+ * @param[out] os Target output stream.
+ * @param[in] pt Point to be outputed in \c os.
+ * @return Output stream \c os after point \c p have been
+ * outputed to \c os (conventionally).
+ */
+template<template <typename PointImpl> class OrderPolicy>
+inline
+std::ostream& operator<<(std::ostream & os, Point<1, OrderPolicy> const & pt) {
+    os << pt[0];
+    return os;
+}
+
+/**
  * Compare two points by coordinates. <tt>byCoordinateLess(lhs, rhs) == true</tt> iff
  * lhs[i] <= rhs[i] for all i. It is a partial order on the set of points.
  * @param[in] lhs Left-hand side argument of “less”.

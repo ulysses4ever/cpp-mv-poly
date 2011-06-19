@@ -19,6 +19,7 @@
 #include <iostream>
 #include <iterator>
 #include <numeric>
+#include <map>
 #include <sstream>
 #include <string>
 #include <typeinfo>
@@ -226,8 +227,16 @@ public:
 
     StorageT const & getCoefs() const     { return data; }
 
+    size_t getPlainDegree() const { return data.size(); }
+
+    // Point<VAR_CNT, OrderPolicy> getDegree()
+
     void setCoefs(StorageT const & data)  { this->data = data; }
 
+    /**
+     * Returns polynomial 1.
+     * @return polynomial 1
+     */
     static Polynomial getId() {
         std::string strRep;
         std::fill_n(std::back_inserter(strRep), VAR_CNT, '[');
@@ -278,7 +287,8 @@ private:
     /**
      * Delete trailing zeros in coefficient collection \c data.
      */
-    void normalization() {
+    void normalization() const {
+        StorageT & data = const_cast<StorageT &>(this->data);
         if (data.size() < 2)
             return; // we will not delete single zero
         ElemT tempDefElem = ElemT();
@@ -659,6 +669,19 @@ template<typename T>
 inline
 Polynomial<T> operator-(Polynomial<T> lhs, Polynomial<T> const & rhs) {
     return lhs -= rhs;
+}
+
+
+template<typename Pt, typename T>
+std::map<Pt, typename Polynomial<T>::CoefT>
+polyToDegCoefMap(Polynomial<T> const & poly) {
+    Point<1> deg;
+    std::map<Pt, typename Polynomial<T>::CoefT>
+        result;
+    BOOST_FOREACH(typename Polynomial<T>::CoefT const & cf, poly.getCoefs()) {
+        result[deg++] = cf;
+    }
+    return result;
 }
 
 } // namespace mv_poly

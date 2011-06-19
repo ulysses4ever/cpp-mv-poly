@@ -21,6 +21,7 @@
 #include <cmath>
 
 #include <tr1/functional>
+#include <boost/foreach.hpp>
 
 #include <NTL/GF2.h>
 #include <NTL/GF2X.h>
@@ -48,10 +49,21 @@ void testField();
 template<typename F>
 void printFieldInPowers(F const & x, int field_size);
 
+
+template<typename F, typename S>
+ostream & operator<<(ostream & os, std::pair<F,S> const & pr) {
+    os << "(" << pr.first << ", " << pr.second << ")";
+    return os;
+}
+
 int main() {
     //testCoxEtAl05();
 //    testSakataEtAl95();
-    testField();
+    //testField();
+
+    //BOOST_FOREACH(decltype(res)::value_type x, res) {}
+
+    //Mp::value_type x;
 }
 
 template<typename PolyT>
