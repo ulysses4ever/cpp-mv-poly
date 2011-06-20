@@ -465,25 +465,27 @@ getConjugatePointCollection(Cont<Point<Dim, OrderPolicy> > const & points) {
  * <tt>Polynomial<… Polynomial<T>… ></tt>).
  *
  * We probaly should use some polymorphism (either static or dynamic)
- * to allow \c pt field contain either Point or Slice itself, but we decided to
+ * to allow \c pt field contain either Point or ConstSlice itself, but we decided to
  * “optimise away” such possibility always keeping a Point instance — this is
- * managed by \c make_slice utility which we consider a part of Slice implementation
+ * managed by \c make_slice utility which we consider a part of ConstSlice implementation
  * so this abstraction is not that leaky. As a proof of this we recall generic
  * utility \c apply_subscript which polymorphically calls operator[] for
- * either Point or Slice instance.
+ * either Point or ConstSlice instance.
  *
  * @param Dim Initial dimension of the point beeing sliced.
  * @param Offset Starting index in initial point to subscript from in
  * the current slice.
  */
 template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
-class Slice {
+class ConstSlice {
     Point<Dim, OrderPolicy> const & pt;
 
 public:
-    Slice(Point<Dim, OrderPolicy> const & pt_) : pt(pt_) {}
+    ConstSlice(Point<Dim, OrderPolicy> const & pt_) : pt(pt_) {}
 
     Point<Dim, OrderPolicy> const & getImpl() const {return pt;}
+
+    operator Point<Dim, OrderPolicy> const &() {return pt;}
 
     typedef typename Point<Dim, OrderPolicy>::const_reference const_reference;
 
@@ -493,23 +495,72 @@ public:
     operator[](size_type n) const {
         return pt[n + Offset];
     }
+
 };
 
-/// Slice of the point is “1-slice”, for 1-slice sl[i] ~ pt[i + 1].
+/// ConstSlice of the point is “1-slice”, for 1-slice sl[i] ~ pt[i + 1].
+template<int Dim, template <typename PointImpl> class OrderPolicy>
+ConstSlice<Dim, OrderPolicy, 1>
+make_slice(Point<Dim, OrderPolicy> const & pt) {
+    return ConstSlice<Dim, OrderPolicy, 1>(pt);
+}
+
+/** ConstSlice of the ConstSlice<Dim, Offset> is ConstSlice<Dim, Offset + 1>.
+ * It is convinient for us to slice by 1 position each time.
+ */
+template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
+ConstSlice<Dim, OrderPolicy, Offset + 1>
+make_slice(ConstSlice<Dim, OrderPolicy, Offset> const & sl) {
+    return ConstSlice<Dim, OrderPolicy, Offset + 1>(sl.getImpl());
+}
+
+/**
+ * Mutable version of ConstSlice.
+ */
+template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
+class Slice {
+    Point<Dim, OrderPolicy> & pt;
+
+public:
+    Slice(Point<Dim, OrderPolicy> & pt_) : pt(pt_) {}
+
+    Point<Dim, OrderPolicy> & getImpl() const {return pt;}
+
+    operator Point<Dim, OrderPolicy> &() {return pt;}
+
+    typedef typename Point<Dim, OrderPolicy>::const_reference const_reference;
+
+    typedef typename Point<Dim, OrderPolicy>::reference reference;
+
+    typedef typename Point<Dim, OrderPolicy>::size_type size_type;
+
+    const_reference
+    operator[](size_type n) const {
+        return pt[n + Offset];
+    }
+
+    reference
+    operator[](size_type n) {
+        return pt[n + Offset];
+    }
+};
+
+/// ConstSlice of the point is “1-slice”, for 1-slice sl[i] ~ pt[i + 1].
 template<int Dim, template <typename PointImpl> class OrderPolicy>
 Slice<Dim, OrderPolicy, 1>
-make_slice(Point<Dim, OrderPolicy> const & pt) {
+make_slice(Point<Dim, OrderPolicy> & pt) {
     return Slice<Dim, OrderPolicy, 1>(pt);
 }
 
-/** Slice of the Slice<Dim, Offset> is Slice<Dim, Offset + 1>. It is convinient
- * for us to slice by 1 position each time.
+/** ConstSlice of the ConstSlice<Dim, Offset> is ConstSlice<Dim, Offset + 1>.
+ * It is convinient for us to slice by 1 position each time.
  */
 template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
 Slice<Dim, OrderPolicy, Offset + 1>
 make_slice(Slice<Dim, OrderPolicy, Offset> const & sl) {
     return Slice<Dim, OrderPolicy, Offset + 1>(sl.getImpl());
 }
+
 
 } // namespace mv_poly
 #endif /* POINT_HPP_ */
