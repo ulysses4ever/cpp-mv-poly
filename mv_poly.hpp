@@ -28,6 +28,7 @@
 
 #include <tr1/functional>
 
+#include "Utilities.hpp"
 #include "Point.hpp"
 #include "CoefficientTraits.hpp"
 
@@ -253,15 +254,15 @@ private:
      * deeper in the polynomial nest. If client calls
      * <tt>MVPolyType<n, T>::operator[Point<n> pt]</tt>,
      * then for all k we will use
-     * <tt>MVPolyType<n - k, T>::operator[Slice<n, k>]</tt>,
-     * where <tt>Slice<n, k></tt> offers access to the part of pt, namely
+     * <tt>MVPolyType<n - k, T>::operator[ConstSlice<n, k>]</tt>,
+     * where <tt>ConstSlice<n, k></tt> offers access to the part of pt, namely
      * <tt>pt[k, k+1, ..., n-1]</tt>
      * @param sl
      * @return
      */
     template<int Dim, template <typename PointImpl> class OrderPolicy,
         int Offset>
-    CoefT operator[](Slice<Dim, OrderPolicy, Offset> const & sl) const;
+    CoefT operator[](ConstSlice<Dim, OrderPolicy, Offset> const & sl) const;
 
     template<typename T1, typename S, typename Pt>
     friend
@@ -270,14 +271,14 @@ private:
     /**
      * Implementation detail: used in operator<<=(Point<VAR_CNT>) for going
      * deeper in the polynomial nest.
-     * @param m Slice of the monomial got in initial client call for
+     * @param m ConstSlice of the monomial got in initial client call for
      * <tt>operator<<=(Point<VAR_CNT>)</tt>.
      * @return This polynomial with one more dimension multiplied on the next
      * initial point component pointed to by the current slice.
      */
     template<int Dim, template <typename PointImpl> class OrderPolicy,
         int Offset>
-    Polynomial operator<<=(Slice<Dim, OrderPolicy, Offset> const & m);
+    Polynomial operator<<=(ConstSlice<Dim, OrderPolicy, Offset> const & m);
 
     template<typename S, typename Pt>
     friend
@@ -338,7 +339,7 @@ public:
  * template class: specialize member only for enclosing class specialization
  * cf. [VJ, 12.3.3]).
  *
- * The point type here (Pt) is actually either Point or Slice, as opposed to
+ * The point type here (Pt) is actually either Point or ConstSlice, as opposed to
  * Polynomial::operator[] we don't handle the variants separately because it's
  * (some kind) hidden implementation detail — with Polynomial::operator[] we
  * wanna be as clear as we can, so parameteres types are as strict as they
@@ -354,22 +355,22 @@ T applySubscript(S const & el, Pt const & pt) {
         return el[pt];
 }
 
-/// When slice is maximal Slice<Dim, Dim - 1> stop slicing a point.
+/// When slice is maximal ConstSlice<Dim, Dim - 1> stop slicing a point.
 template<typename T, typename S, int Dim,
     template <typename PointImpl> class OrderPolicy>
-T applySubscript(S const & el, Slice<Dim, OrderPolicy, Dim - 1> const & pt) {
+T applySubscript(S const & el, ConstSlice<Dim, OrderPolicy, Dim - 1> const & pt) {
         return el[pt[0]];
 }
 
 /**
- * Handling Slice<Dim, Dim>. Actually this type is illegal
- * (in Slice<Dim, Offset> we should have Dim > Offset). If we get here, it means
+ * Handling ConstSlice<Dim, Dim>. Actually this type is illegal
+ * (in ConstSlice<Dim, Offset> we should have Dim > Offset). If we get here, it means
  * client used MVPolyType<1, T>::operator[](Point<1>) instead of operator[](int).
  * But client is always right so we cope with this correctly.
  */
 template<typename T, typename S, int Dim,
     template <typename PointImpl> class OrderPolicy>
-T applySubscript(S const & el, Slice<Dim, OrderPolicy, Dim> const & pt) {
+T applySubscript(S const & el, ConstSlice<Dim, OrderPolicy, Dim> const & pt) {
         return el;
 }
 
@@ -386,7 +387,7 @@ Polynomial<T>::operator[](Point<VAR_CNT, OrderPolicy> const & pt) const {
 template<typename T>
 template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
 typename Polynomial<T>::CoefT
-Polynomial<T>::operator[](Slice<Dim, OrderPolicy, Offset> const & sl) const {
+Polynomial<T>::operator[](ConstSlice<Dim, OrderPolicy, Offset> const & sl) const {
     if (sl[0] < int(0) || int(data.size()) <= sl[0])
         return CoefficientTraits<CoefT>::addId();
     else
@@ -548,7 +549,7 @@ template<typename T, int Dim, template <typename PointImpl> class OrderPolicy>
 inline
 void applyMonomialMultiplication(
         T & elem,
-        Slice<Dim, OrderPolicy, Dim - 1> const & monomial) {
+        ConstSlice<Dim, OrderPolicy, Dim - 1> const & monomial) {
     elem <<= monomial[0];
 }
 
@@ -556,7 +557,7 @@ template<typename T, int Dim, template <typename PointImpl> class OrderPolicy>
 inline
 void applyMonomialMultiplication(
         T & elem,
-        Slice<Dim, OrderPolicy, Dim> const & monomial) {
+        ConstSlice<Dim, OrderPolicy, Dim> const & monomial) {
     return;
 }
 
@@ -574,7 +575,7 @@ template<typename T>
 template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
 inline
 Polynomial<T>
-Polynomial<T>::operator<<=(Slice<Dim, OrderPolicy, Offset> const & monomial) {
+Polynomial<T>::operator<<=(ConstSlice<Dim, OrderPolicy, Offset> const & monomial) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1;
     for (typename StorageT::iterator it = data.begin(); it != data.end(); ++it)
@@ -671,17 +672,40 @@ Polynomial<T> operator-(Polynomial<T> lhs, Polynomial<T> const & rhs) {
     return lhs -= rhs;
 }
 
+template<typename Pt, typename T, typename ResultT>
+ResultT
+polyToDegCoefMapImpl(
+        Polynomial<T> const & poly,
+        Pt deg,
+        ResultT & result) {
+    BOOST_FOREACH(typename Polynomial<T>::CoefT const & cf, poly.getCoefs()) {
+        result[deg] = cf;
+        ++deg[0];
+    }
+    deg[0] = 0;
+    return result;
+}
+
+template<typename Pt, typename T, typename ResultT>
+ResultT
+polyToDegCoefMapImpl(
+        Polynomial< Polynomial <T> > const & poly,
+        Pt deg,
+        ResultT & result) {
+    BOOST_FOREACH(typename Polynomial< Polynomial <T> >::ElemT const & cf, poly.getCoefs()) {
+        polyToDegCoefMapImpl(cf, make_slice(deg), result);
+        ++deg[0];
+    }
+    deg[0] = 0;
+    return result;
+}
 
 template<typename Pt, typename T>
 std::map<Pt, typename Polynomial<T>::CoefT>
 polyToDegCoefMap(Polynomial<T> const & poly) {
-    Point<1> deg;
-    std::map<Pt, typename Polynomial<T>::CoefT>
-        result;
-    BOOST_FOREACH(typename Polynomial<T>::CoefT const & cf, poly.getCoefs()) {
-        result[deg++] = cf;
-    }
-    return result;
+    Pt deg;
+    std::map<Pt, typename Polynomial<T>::CoefT> result;
+    return polyToDegCoefMapImpl(poly, deg, result);
 }
 
 } // namespace mv_poly
