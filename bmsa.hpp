@@ -22,19 +22,11 @@
 #include <boost/iterator/transform_iterator.hpp>
 
 #include "mv_poly.hpp"
+#include "Utilities.hpp"
 #include "Point.hpp"
 #include "CoefficientTraits.hpp"
 
-using namespace mv_poly;
-
 namespace mv_poly {
-template<typename T1, typename T2>
-inline
-std::ostream& operator<<(std::ostream & os, std::pair<T1, T2> const & p) {
-    os << "(" << p.first << ", " << p.second << ")";
-    return os;
-}
-}
 
 template<
     typename PolynomialT,
@@ -283,5 +275,7 @@ void printOrderedDefPoints(std::list< Point<2> > const & points) {
         cout << endl;
     }
 }
+
+} // namespace mv_poly
 
 #endif /* BMSA_HPP_ */
