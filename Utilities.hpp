@@ -11,6 +11,8 @@
 #include <utility>
 #include <iostream>
 
+#define ARR_LEN(arr) (sizeof(arr) / sizeof(*(arr)))
+
 namespace mv_poly {
 
 template<typename T1, typename T2>
