@@ -708,6 +708,21 @@ polyToDegCoefMap(Polynomial<T> const & poly) {
     return polyToDegCoefMapImpl(poly, deg, result);
 }
 
+template<typename PolyT>
+PolyT load_coefs(typename PolyT::CoefT const * coefs[], size_t len, size_t * coefsLens) {
+    typename PolyT::StorageT stor;
+    typedef typename PolyT::ElemT ElemT;
+    for (size_t i = 0; i < len; ++i) {
+        ElemT elem;
+        elem.setCoefs(typename ElemT::StorageT(
+                coefs[i], coefs[i] + coefsLens[i]));
+        stor.push_back(elem);
+    }
+    PolyT res;
+    res.setCoefs(stor);
+    return res;
+}
+
 } // namespace mv_poly
 
 #endif /* MV_POLY_HPP_ */
