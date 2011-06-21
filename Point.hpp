@@ -135,7 +135,7 @@ public:
         return lhs.data == rhs.data;
     }
 
-};
+}; // class Point
 
 /**
  * Summs up elements of a given container \c c.
@@ -203,8 +203,10 @@ template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
 std::ostream& operator<<(std::ostream & os, Point<Dim, OrderPolicy> const & pt) {
     os << "(";
-    std::copy(pt.begin(), pt.end(), std::ostream_iterator<int>(os, ","));
-    os /*<< *pt.end()--*/ << ")";
+    //std::copy(pt.begin(), pt.end(), std::ostream_iterator<int>(os, ","));
+    for(int i = 0; i < Dim - 1; ++i)
+        os << pt[i] << ", ";
+    os << pt[Dim - 1] << ")";
     return os;
 }
 
