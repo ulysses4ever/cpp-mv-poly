@@ -700,9 +700,12 @@ polyToDegCoefMapImpl(
     return result;
 }
 
-template<typename Pt, typename T>
-std::map<Pt, typename Polynomial<T>::CoefT>
+template<template <typename> class OrderPolicy, typename T>
+std::map<
+        Point<Polynomial<T>::VAR_CNT, OrderPolicy>,
+        typename Polynomial<T>::CoefT>
 polyToDegCoefMap(Polynomial<T> const & poly) {
+    typedef Point<Polynomial<T>::VAR_CNT, OrderPolicy> Pt;
     Pt deg;
     std::map<Pt, typename Polynomial<T>::CoefT> result;
     return polyToDegCoefMapImpl(poly, deg, result);
