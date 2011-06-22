@@ -9,17 +9,33 @@
 #define NTLPOLYNOMIALS_HPP_
 
 #include <map>
+#include <string>
+
+#include <NTL/GF2.h>
+#include <NTL/ZZ_p.h>
+#include <NTL/GF2E.h>
+#include <NTL/ZZ_pE.h>
 
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/mpl/contains.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/utility/enable_if.hpp>
 
 #include "mv_poly.hpp"
 #include "Point.hpp"
+
+namespace mv_poly {
+
+typedef boost::mpl::vector<NTL::GF2E, NTL::ZZ_pE> NtlExtFieldTypes;
+typedef boost::mpl::vector<NTL::GF2, NTL::ZZ_p> NtlPrimeFieldTypes;
 
 /**
  * TODO: add comment
  */
 template<template <typename> class OrderPolicy, typename T>
-class PowerPrinter {
+class PowerPolyPrinter {
+
     typedef typename Polynomial<T>::CoefT CoefT;
 
     typedef std::map<Point<Polynomial<T>::VAR_CNT, OrderPolicy>, CoefT>
@@ -40,38 +56,61 @@ class PowerPrinter {
     }
 
 public:
-    PowerPrinter(CoefT const & x, Polynomial<T> const & p) :
-            x(x) {
+
+    PowerPolyPrinter(Polynomial<T> const & p, CoefT const & x) : x(x) {
         data = polyToDegCoefMap<OrderPolicy>(p);
+    }
+
+    template<typename CoefT>
+    std::string
+    coef_tostr(
+            CoefT const & cf,
+            typename boost::enable_if<
+                    boost::mpl::contains<NtlExtFieldTypes, CoefT> >::type * = 0
+            ) const {
+        return "a^" + boost::lexical_cast<std::string>(log(cf)) + " ";
+    }
+
+    template<typename CoefT>
+    std::string
+    coef_tostr(
+            CoefT const & cf,
+            typename boost::enable_if<
+                    boost::mpl::contains<NtlPrimeFieldTypes, CoefT> >::type * = 0
+            ) const {
+        return cf == CoefficientTraits<CoefT>::multId() ? "" :
+                boost::lexical_cast<std::string>(cf) + " ";
     }
 
     friend
     std::ostream & operator<<(
             std::ostream & os,
-            PowerPrinter<OrderPolicy, T> const & pp) {
-        //BOOST_FOREACH(typename PointCoefMap::value_type const & pt_cf, pp.data) {
+            PowerPolyPrinter<OrderPolicy, T> const & pp) {
         if (pp.data.empty())
             return os;
         for(typename PointCoefMap::const_iterator it = pp.data.begin();
                 it != --pp.data.end(); ++it) {
             typename PointCoefMap::value_type const & pt_cf = *it;
             if (pt_cf.second != CoefT::zero()) {
-                os << "a^" << pp.log(pt_cf.second)
-                        << " X^" << pt_cf.first << " + ";
+                os << pp.coef_tostr(pt_cf.second)
+                        << "X^" << pt_cf.first << " + ";
             }
         }
         typename PointCoefMap::value_type const & pt_cf = *(--pp.data.end());
-        os << "a^" << pp.log(pt_cf.second)
-                                << " X^" << pt_cf.first;
+        os << pp.coef_tostr(pt_cf.second)
+                                << "X^" << pt_cf.first;
         return os;
     }
+
 };
 
 template<template <typename> class OrderPolicy, typename T>
-PowerPrinter<OrderPolicy, T> makePowerPrinter(
-        typename Polynomial<T>::CoefT const & x,
-        Polynomial<T> const & p) {
-    return PowerPrinter<OrderPolicy, T>(x, p);
+PowerPolyPrinter<OrderPolicy, T> makePowerPrinter(
+        Polynomial<T> const & p,
+        typename Polynomial<T>::CoefT const & x
+            = CoefficientTraits<typename Polynomial<T>::CoefT>::addId()) {
+    return PowerPolyPrinter<OrderPolicy, T>(p, x);
 }
+} // namespace mv_poly
 
 #endif /* NTLPOLYNOMIALS_HPP_ */
