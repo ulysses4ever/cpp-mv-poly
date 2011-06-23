@@ -55,15 +55,9 @@ class PowerPolyPrinter {
         return result;
     }
 
-public:
-
-    PowerPolyPrinter(Polynomial<T> const & p, CoefT const & x) : x(x) {
-        data = polyToDegCoefMap<OrderPolicy>(p);
-    }
-
     template<typename CoefT>
     std::string
-    coef_tostr(
+    coefToString(
             CoefT const & cf,
             typename boost::enable_if<
                     boost::mpl::contains<NtlExtFieldTypes, CoefT> >::type * = 0
@@ -73,7 +67,7 @@ public:
 
     template<typename CoefT>
     std::string
-    coef_tostr(
+    coefToString(
             CoefT const & cf,
             typename boost::enable_if<
                     boost::mpl::contains<NtlPrimeFieldTypes, CoefT> >::type * = 0
@@ -82,22 +76,28 @@ public:
                 boost::lexical_cast<std::string>(cf) + " ";
     }
 
-    friend
+ public:
+
+    PowerPolyPrinter(Polynomial<T> const & p, CoefT const & x) : x(x) {
+        data = polyToDegCoefMap<OrderPolicy>(p);
+    }
+
+   friend
     std::ostream & operator<<(
             std::ostream & os,
-            PowerPolyPrinter<OrderPolicy, T> const & pp) {
+            PowerPolyPrinter const & pp) {
         if (pp.data.empty())
             return os;
         for(typename PointCoefMap::const_iterator it = pp.data.begin();
                 it != --pp.data.end(); ++it) {
             typename PointCoefMap::value_type const & pt_cf = *it;
             if (pt_cf.second != CoefT::zero()) {
-                os << pp.coef_tostr(pt_cf.second)
+                os << pp.coefToString(pt_cf.second)
                         << "X^" << pt_cf.first << " + ";
             }
         }
         typename PointCoefMap::value_type const & pt_cf = *(--pp.data.end());
-        os << pp.coef_tostr(pt_cf.second)
+        os << pp.coefToString(pt_cf.second)
                                 << "X^" << pt_cf.first;
         return os;
     }
@@ -105,12 +105,14 @@ public:
 };
 
 template<template <typename> class OrderPolicy, typename T>
-PowerPolyPrinter<OrderPolicy, T> makePowerPrinter(
+PowerPolyPrinter<OrderPolicy, T>
+makePowerPrinter(
         Polynomial<T> const & p,
         typename Polynomial<T>::CoefT const & x
             = CoefficientTraits<typename Polynomial<T>::CoefT>::addId()) {
     return PowerPolyPrinter<OrderPolicy, T>(p, x);
 }
+
 } // namespace mv_poly
 
 #endif /* NTLPOLYNOMIALS_HPP_ */
