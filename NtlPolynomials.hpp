@@ -31,17 +31,20 @@ typedef boost::mpl::vector<NTL::GF2E, NTL::ZZ_pE> NtlExtFieldTypes;
 typedef boost::mpl::vector<NTL::GF2, NTL::ZZ_p> NtlPrimeFieldTypes;
 
 /**
- * TODO: add comment
+ * Effector (cf. Eckel, TIC++ vol. 2, ch. 4) that takes a polynomial ‘p’
+ * and a field primitive element ‘a’ to print ‘p’ in a “pretty” form:
+ * a^k x^(m, n) + a^k' x^(m', n') + …
  */
 template<template <typename> class OrderPolicy, typename T>
 class PowerPolyPrinter {
 
     typedef typename Polynomial<T>::CoefT CoefT;
 
-    typedef std::map<Point<Polynomial<T>::VAR_CNT, OrderPolicy>, CoefT>
-        PointCoefMap;
+    typedef Point<Polynomial<T>::VAR_CNT, OrderPolicy> PointT;
 
-    CoefT x;
+    typedef std::map<PointT, CoefT> PointCoefMap;
+
+    CoefT a;
 
     PointCoefMap data;
 
@@ -49,7 +52,7 @@ class PowerPolyPrinter {
         int result = 0;
         CoefT pw = CoefficientTraits<CoefT>::multId();
         while (pw != cf) {
-            mul(pw, pw, x);
+            mul(pw, pw, a);
             ++result;
         }
         return result;
@@ -62,7 +65,8 @@ class PowerPolyPrinter {
             typename boost::enable_if<
                     boost::mpl::contains<NtlExtFieldTypes, CoefT> >::type * = 0
             ) const {
-        return "a^" + boost::lexical_cast<std::string>(log(cf)) + " ";
+        int l = log(cf);
+        return 0 == l ? "" : "a^" + boost::lexical_cast<std::string>(l) + " ";
     }
 
     template<typename CoefT>
@@ -78,7 +82,7 @@ class PowerPolyPrinter {
 
  public:
 
-    PowerPolyPrinter(Polynomial<T> const & p, CoefT const & x) : x(x) {
+    PowerPolyPrinter(Polynomial<T> const & p, CoefT const & a) : a(a) {
         data = polyToDegCoefMap<OrderPolicy>(p);
     }
 
@@ -92,8 +96,12 @@ class PowerPolyPrinter {
                 it != --pp.data.end(); ++it) {
             typename PointCoefMap::value_type const & pt_cf = *it;
             if (pt_cf.second != CoefT::zero()) {
-                os << pp.coefToString(pt_cf.second)
-                        << "X^" << pt_cf.first << " + ";
+                const std::string strCoef = pp.coefToString(pt_cf.second);
+                if (pt_cf.first == PointT()) {
+                    os << (strCoef == "" ? "1 " : strCoef) + "+ ";
+                } else
+                    os << strCoef
+                            << "X^" << pt_cf.first << " + ";
             }
         }
         typename PointCoefMap::value_type const & pt_cf = *(--pp.data.end());
