@@ -62,7 +62,7 @@ struct MVPolyType<1, Coef> {
     // multivariate polynomial from 1 variable is just Polynomial
     typedef Polynomial<Coef> ResultT;
 
-    typedef ResultT type; // result as in Boost.MPL
+    typedef ResultT type; // result as in Boost.MPL - for compatability reasons
 };
 /// \endcond
 
