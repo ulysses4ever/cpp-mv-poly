@@ -14,12 +14,19 @@
 
 #include <cmath>
 
+#include <boost/lexical_cast.hpp>
+#include <boost/mpl/contains.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/utility/enable_if.hpp>
+
 #include <NTL/GF2.h>
 #include <NTL/GF2X.h>
 #include <NTL/GF2E.h>
 #include <NTL/ZZ_p.h>
 #include <NTL/ZZ_pE.h>
 #include <NTL/ZZ_pX.h>
+
+#include "CoefficientTraits.hpp"
 
 template<typename F>
 struct NTLPrimeFieldTtraits {
@@ -83,5 +90,71 @@ void printFieldInPowers(F const & x, size_t field_size) {
     cout << endl;
 }
 
+typedef boost::mpl::vector<NTL::GF2E, NTL::ZZ_pE> NtlExtFieldTypes;
+typedef boost::mpl::vector<NTL::GF2, NTL::ZZ_p> NtlPrimeFieldTypes;
+
+/**
+ * Print NTL field elements as powers of a given primitive element.
+ */
+template<typename T>
+class NtlPowerPrinter {
+
+    typedef T ElemT;
+
+    ElemT a;
+
+    ElemT elem;
+
+    int log(ElemT const & cf) const {
+        int result = 0;
+        ElemT pw = mv_poly::CoefficientTraits<ElemT>::multId();
+        while (pw != cf) {
+            mul(pw, pw, a);
+            ++result;
+        }
+        return result;
+    }
+
+    template<typename CoefT>
+    std::string
+    elemToString(
+            CoefT const & cf,
+            typename boost::enable_if<
+                    boost::mpl::contains<NtlExtFieldTypes, CoefT> >::type * = 0
+            ) const {
+        int l = log(cf);
+        return 0 == l ? "" : "a^" + boost::lexical_cast<std::string>(l) + " ";
+    }
+
+    template<typename CoefT>
+    std::string
+    elemToString(
+            CoefT const & cf,
+            typename boost::enable_if<
+                    boost::mpl::contains<NtlPrimeFieldTypes, CoefT> >::type * = 0
+            ) const {
+        return cf == mv_poly::CoefficientTraits<CoefT>::multId() ? "" :
+                boost::lexical_cast<std::string>(cf) + " ";
+    }
+
+ public:
+
+    NtlPowerPrinter(ElemT const & a, ElemT const & elem) : a(a), elem(elem) {}
+
+    friend
+    std::ostream & operator<<(
+            std::ostream & os,
+            NtlPowerPrinter const & pp) {
+        os << pp.elemToString(pp.elem);
+        return os;
+    }
+
+}; // class NtlPowerPrinter
+
+template<typename ElemT>
+inline
+NtlPowerPrinter<ElemT> makeNtlPowerPrinter(ElemT const & a, ElemT const & elem) {
+    return NtlPowerPrinter<ElemT>(a, elem);
+}
 
 #endif /* NTLUTILITIES_HPP_ */
