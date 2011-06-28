@@ -25,6 +25,7 @@ template<typename PointImpl>
 struct GradedAntilexMonomialOrder;
 
 /**
+ * \class Point
  * Point in N-dimensional integer lattice.
  * @param Dim Dimension of point lattice.
  */
