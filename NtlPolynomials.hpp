@@ -48,45 +48,13 @@ class PowerPolyPrinter {
 
     PointCoefMap data;
 
-    int log(CoefT const & cf) const {
-        int result = 0;
-        CoefT pw = CoefficientTraits<CoefT>::multId();
-        while (pw != cf) {
-            mul(pw, pw, a);
-            ++result;
-        }
-        return result;
-    }
-
-    template<typename CoefT>
-    std::string
-    coefToString(
-            CoefT const & cf,
-            typename boost::enable_if<
-                    boost::mpl::contains<NtlExtFieldTypes, CoefT> >::type * = 0
-            ) const {
-        int l = log(cf);
-        return 0 == l ? "" : "a^" + boost::lexical_cast<std::string>(l) + " ";
-    }
-
-    template<typename CoefT>
-    std::string
-    coefToString(
-            CoefT const & cf,
-            typename boost::enable_if<
-                    boost::mpl::contains<NtlPrimeFieldTypes, CoefT> >::type * = 0
-            ) const {
-        return cf == CoefficientTraits<CoefT>::multId() ? "" :
-                boost::lexical_cast<std::string>(cf) + " ";
-    }
-
  public:
 
     PowerPolyPrinter(Polynomial<T> const & p, CoefT const & a) : a(a) {
         data = polyToDegCoefMap<OrderPolicy>(p);
     }
 
-   friend
+    friend
     std::ostream & operator<<(
             std::ostream & os,
             PowerPolyPrinter const & pp) {
@@ -96,7 +64,8 @@ class PowerPolyPrinter {
                 it != --pp.data.end(); ++it) {
             typename PointCoefMap::value_type const & pt_cf = *it;
             if (pt_cf.second != CoefT::zero()) {
-                const std::string strCoef = pp.coefToString(pt_cf.second);
+                const std::string strCoef = boost::lexical_cast<std::string>(
+                        makeNtlPowerPrinter(pp.a, pt_cf.second));
                 if (pt_cf.first == PointT()) {
                     os << (strCoef == "" ? "1 " : strCoef) + "+ ";
                 } else
@@ -105,7 +74,7 @@ class PowerPolyPrinter {
             }
         }
         typename PointCoefMap::value_type const & pt_cf = *(--pp.data.end());
-        os << pp.coefToString(pt_cf.second)
+        os << makeNtlPowerPrinter(pp.a, pt_cf.second)
                                 << "X^" << pt_cf.first;
         return os;
     }
