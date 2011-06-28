@@ -10,8 +10,9 @@
 #ifndef COEFFICIENTTRAITS_HPP_
 #define COEFFICIENTTRAITS_HPP_
 
-#include <loki/Typelist.h>
-#include <loki/TypeManip.h>
+#include <boost/mpl/contains.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/utility/enable_if.hpp>
 
 #include <NTL/GF2.h>
 #include <NTL/GF2E.h>
@@ -20,27 +21,67 @@
 
 namespace mv_poly {
 
-template<typename CoefT>
-struct DefaultCoefficientTraits {
+/**
+ * \class CoefficientTraits
+ * Provide basic algebraic properties of the
+ * polynomial coefficients type.
+ *
+ * \note
+ * We suppose that coefficient set forms a field,
+ * so we want the type to have a way to obtain 0, 1, -a, a^{-1}.
+ */
+template<typename CoefT, typename Enable = void>
+struct CoefficientTraits {
+
+    /**
+     * Obtaining multiplicative inverse in the field.
+     * @param c Non-zero element.
+     * @return \c c^{-1} (additive inverse in CoefT field).
+     */
     static CoefT multInverse(CoefT const & c) {
         return 1 / c;
     }
 
+    /**
+     * Obtaining multiplicative inverse in the field.
+     * @param c Any element of CoefT.
+     * @return \c -c (additive inverse in CoefT field).
+     */
     static CoefT addInverse(CoefT const & c) {
         return -c;
     }
 
+    /**
+     * Obtaining multiplicative identity of CoefT field.
+     * @return Multiplicative identity (\c 1) of CoefT field.
+     */
     static CoefT multId() {
         return 1;
     }
 
+    /**
+     * Obtaining additive identity of CoefT field.
+     * @return Additive identity (\c 1) of CoefT field.
+     */
     static CoefT addId() {
         return CoefT();
     }
 };
 
+typedef boost::mpl::vector<NTL::GF2E, NTL::ZZ_pE, NTL::GF2, NTL::ZZ_p>
+    NtlFieldTypes;
+
+/**
+ * CoefficientTraits template specialization for NTL field types
+ * (triggers with the boost::enable_if help).
+ */
 template<typename T>
-struct NtlCoefficientTraits {
+struct CoefficientTraits<
+        T,
+        typename boost::enable_if<
+            boost::mpl::contains<NtlFieldTypes, T>
+        >::type > {
+
     static T multInverse(T const & c) {
         return NTL::inv(c);
     }
@@ -60,21 +101,6 @@ struct NtlCoefficientTraits {
         return zero;
     }
 };
-
-template<typename T>
-class isNtlType {
-    typedef LOKI_TYPELIST_4(NTL::GF2, NTL::GF2E, NTL::ZZ_p, NTL::ZZ_pE)
-            NtlFiniteFieldTypes;
-
-public:
-    enum { result = Loki::TL::IndexOf<NtlFiniteFieldTypes, T>::value >= 0 };
-};
-
-template<typename CoefT>
-struct CoefficientTraits : public Loki::Select<
-                            isNtlType<CoefT>::result,
-                            NtlCoefficientTraits<CoefT>,
-                            DefaultCoefficientTraits<CoefT> >::Result {};
 
 } // namespace mv_poly
 
