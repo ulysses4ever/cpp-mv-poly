@@ -41,39 +41,31 @@ public:
 private:
     typedef std::list< Point<Dim, OrderPolicy> > PointCollection;
 
-    PointPolyMap F, G;
-
     typedef typename PolynomialT::CoefT CoefT;
-
-    const CoefT ZERO;
 
     typedef std::map< Point<Dim, OrderPolicy>, CoefT > PointCoefMap;
 
-    PolynomialT const & seq;
+    PointPolyMap G;
+
+    const CoefT ZERO;
 
     Point<Dim, OrderPolicy> seqLen;
 
-public:
+    PointCollection oldDeltaPoints;
 
-    typedef std::list< PolynomialT > PolynomialCollection;
+protected:
 
-    BMSAlgorithm(PolynomialT const & seq_,
-            Point<Dim, OrderPolicy> const & seqLen_) :
-                ZERO(CoefficientTraits<CoefT>::addId()),
-                seq(seq_), seqLen(seqLen_)  {
-        F.insert(std::make_pair(Point<Dim>(), PolynomialT::getId()));
-    }
+    PointPolyMap F;
 
-    PolynomialCollection computeMinimalSet() {
+    PolynomialT const & seq;
+
+    void infoUpdate(Point<Dim> const & k) {
         using std::tr1::bind;
         using std::tr1::cref;
         using namespace std::tr1::placeholders;
         using std::cout;
         using std::endl;
 
-        PointCollection oldDeltaPoints;
-        // scanning input sequense step-by-step, following monomial order
-        for (Point<Dim> k; k < seqLen; ++k) {
 //            cout << "k = " << k << endl;
             PointPolyMap newF, newG;
             PointCollection deltaPoints, sigmaPoints;
@@ -175,6 +167,24 @@ public:
 //            copy(G.begin(), G.end(),
 //                    std::ostream_iterator<typename PointPolyMap::value_type>(cout, "\n"));
 //            cout << endl;
+    }
+
+public:
+
+    typedef std::list< PolynomialT > PolynomialCollection;
+
+    BMSAlgorithm(PolynomialT const & seq_,
+            Point<Dim, OrderPolicy> const & seqLen_) :
+                ZERO(CoefficientTraits<CoefT>::addId()),
+                seqLen(seqLen_), seq(seq_) {
+        F.insert(std::make_pair(Point<Dim>(), PolynomialT::getId()));
+    }
+
+    PolynomialCollection computeMinimalSet() {
+        oldDeltaPoints.clear();
+        // scanning input sequense step-by-step, following monomial order
+        for (Point<Dim> k; k < seqLen; ++k) {
+            infoUpdate(k);
         }
         return getPolynomialList();
 
