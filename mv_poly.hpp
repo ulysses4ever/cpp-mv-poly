@@ -427,7 +427,7 @@ conv(
     typename Polynomial<T>::CoefT res;
     Point<Polynomial<T>::VAR_CNT> i;
     while(i <= degf) {
-        using namespace std;
+//        using namespace std;
 //        cout << i << " " << f[i] << " " << u[i + m - degf]
 //                                             << f[i] * u[i + m - degf] << endl;
         res += f[i] * u[i + m - degf];
