@@ -172,7 +172,8 @@ public:
 
     typedef std::list< PolynomialT > PolynomialCollection;
 
-    BMSAlgorithm(SeqT const & seq_,
+    BMSAlgorithm(
+            SeqT const & seq_,
             Point<Dim, OrderPolicy> const & seqLen_) :
                 ZERO(CoefficientTraits<CoefT>::addId()),
                 seqLen(seqLen_), seq(seq_) {
