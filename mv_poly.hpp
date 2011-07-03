@@ -129,6 +129,11 @@ public:
     typedef typename PolyCoeff<T>::Type CoefT;
 
     /**
+     * STL-compliant typedef for map-like types.
+     */
+    typedef CoefT mapped_type;
+
+    /**
      * Number of polynomial variables. Actually it's nestedness depth of type
      * <tt>Polynomial<Polynomial<… Polynomial<T>… ></tt>.
      */
@@ -415,25 +420,37 @@ Polynomial<T>::operator[](int pt) const {
  * virtually — get with our convolution operation.
  * @return
  */
-template<typename T>
+template<typename ResT, typename SeqT1, typename SeqT2, typename PointT>
 inline
-typename Polynomial<T>::CoefT
+ResT
 conv(
-        Polynomial<T> const & f,
-        Polynomial<T> const & u,
-        Point<Polynomial<T>::VAR_CNT> const & degf,
-        Point<Polynomial<T>::VAR_CNT> const & m) {
+        SeqT1 const & f,
+        SeqT2 const & u,
+        PointT const & degf,
+        PointT const & m) {
     assert( byCoordinateLess(degf, m) );
-    typename Polynomial<T>::CoefT res;
-    Point<Polynomial<T>::VAR_CNT> i;
+    ResT res;
+    PointT i;
     while(i <= degf) {
-//        using namespace std;
-//        cout << i << " " << f[i] << " " << u[i + m - degf]
-//                                             << f[i] * u[i + m - degf] << endl;
         res += f[i] * u[i + m - degf];
         ++i;
     }
     return res;
+}
+
+/**
+ * conv overloading using nested typedef of SeqT1 (mapped_type) instead of
+ * extra template parameter as in general version of conv (see above).
+ */
+template<typename SeqT1, typename SeqT2, typename PointT>
+inline
+typename SeqT1::mapped_type
+conv(
+        SeqT1 const & f,
+        SeqT2 const & u,
+        PointT const & degf,
+        PointT const & m) {
+    return conv<typename SeqT1::mapped_type>(f, u, degf, m);
 }
 
 /**
