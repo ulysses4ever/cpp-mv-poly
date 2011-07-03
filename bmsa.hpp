@@ -29,7 +29,8 @@
 namespace mv_poly {
 
 template<
-    typename PolynomialT,
+    typename SeqT,
+    typename PolynomialT = SeqT,
     template <typename PointImpl> class OrderPolicy = GradedAntilexMonomialOrder
 >
 class BMSAlgorithm {
@@ -53,11 +54,11 @@ private:
 
     PointCollection oldDeltaPoints;
 
-protected:
-
     PointPolyMap F;
 
-    PolynomialT const & seq;
+    SeqT const & seq;
+
+public:
 
     void infoUpdate(Point<Dim> const & k) {
         using std::tr1::bind;
@@ -169,11 +170,9 @@ protected:
 //            cout << endl;
     }
 
-public:
-
     typedef std::list< PolynomialT > PolynomialCollection;
 
-    BMSAlgorithm(PolynomialT const & seq_,
+    BMSAlgorithm(SeqT const & seq_,
             Point<Dim, OrderPolicy> const & seqLen_) :
                 ZERO(CoefficientTraits<CoefT>::addId()),
                 seqLen(seqLen_), seq(seq_) {
@@ -227,11 +226,31 @@ private:
 //BMSAlgorithm<T, OrderPolicy>::ZERO =
 //    CoefficientTraits<typename BMSAlgorithm<T, OrderPolicy>::CoefT>::addId();
 
-template<typename PolynomialT, template <typename PointImpl> class OrderPolicy>
-BMSAlgorithm<PolynomialT, OrderPolicy>
-make_bmsalgorithm(PolynomialT const & seq,
-        Point<BMSAlgorithm<PolynomialT, OrderPolicy>::Dim, OrderPolicy> const & seqLen) {
-    return BMSAlgorithm<PolynomialT, OrderPolicy>(seq, seqLen);
+template<typename SeqT,typename PolynomialT, template <typename PointImpl> class OrderPolicy>
+BMSAlgorithm<SeqT, PolynomialT, OrderPolicy>
+make_bmsalgorithm(
+        SeqT const & seq,
+        Point<BMSAlgorithm<SeqT, PolynomialT, OrderPolicy>::Dim, OrderPolicy>
+            const & seqLen) {
+    return BMSAlgorithm<SeqT, PolynomialT, OrderPolicy>(seq, seqLen);
+}
+
+template<typename SeqT,typename PolynomialT>
+BMSAlgorithm<SeqT, PolynomialT>
+make_bmsalgorithm(
+        SeqT const & seq,
+        Point<BMSAlgorithm<SeqT, PolynomialT>::Dim>
+            const & seqLen) {
+    return BMSAlgorithm<SeqT, PolynomialT>(seq, seqLen);
+}
+
+template<typename SeqT>
+BMSAlgorithm<SeqT>
+make_bmsalgorithm(
+        SeqT const & seq,
+        Point<BMSAlgorithm<SeqT>::Dim>
+            const & seqLen) {
+    return BMSAlgorithm<SeqT>(seq, seqLen);
 }
 
 bool defPointsOrder(Point<2> const & lhs, Point<2> const & rhs) {
@@ -242,7 +261,7 @@ template<typename CoefT>
 std::list< Point<2> > getOrderedDefPoints(
         typename BMSAlgorithm<
             typename MVPolyType<2, CoefT>::type
-        >::PointPolyMap const & ppmap) {
+            >::PointPolyMap const & ppmap) {
     typedef typename BMSAlgorithm<
                 typename MVPolyType<2, CoefT>::type
             >::PointPolyMap::value_type map_value_type;
