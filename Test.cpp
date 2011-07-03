@@ -17,6 +17,8 @@
 #include "mv_poly.hpp"
 #include "Point.hpp"
 #include "bmsa.hpp"
+#include "NtlUtilities.hpp"
+#include "NtlPolynomials.hpp"
 
 namespace TestMVPoly {
 
@@ -299,11 +301,46 @@ void testPolyToDegCoefMapConversion() {
     Polynomial<int> p;
     istringstream iss("[3 2 3]");
     iss >> p;
-    auto res = polyToDegCoefMap< Point<1> >(p);
+    auto res = polyToDegCoefMap< GradedAntilexMonomialOrder >(p);
     typedef decltype(res) DegCoefMap;
     ostringstream os;
     copy(res.begin(), res.end(), ostream_iterator<DegCoefMap::value_type>(os, ", "));
     ASSERT_EQUAL("(0, 3), (1, 2), (2, 3), ", os.str());
+
+    MVPolyType<2, int>::type p1;
+    iss.str("[[3 2] [3 1] [1]]");
+    iss >> p1;
+    auto res1 = polyToDegCoefMap< GradedAntilexMonomialOrder >(p1);
+    typedef decltype(res1) DegCoefMap1;
+    os.str("");
+    copy(res1.begin(), res1.end(),
+            ostream_iterator<DegCoefMap1::value_type>(os, ", "));
+    ASSERT_EQUAL(
+            "((0, 0), 3), ((1, 0), 3), ((0, 1), 2), ((2, 0), 1), ((1, 1), 1), ",
+            os.str());
+}
+
+void polyPowerPrinting() {
+    typedef NTL::GF2 PrimeField;
+    typedef typename NTLPrimeFieldTtraits<PrimeField>::ExtField ExtField;
+
+    std::ostringstream os;
+
+    initExtendedField<PrimeField>("[1 1 1]");
+    ExtField x = getPrimitive<ExtField>();
+
+    MVPolyType<2, ExtField>::type
+        p("[[[1]] [[1 1]]]"); //[1 0 1 1] [0 1 1] [1 1] [1] [0]
+
+    os << makePowerPrinter< GradedAntilexMonomialOrder >(p, x);
+    ASSERT_EQUAL("1 + a^2 X^(1, 0)", os.str());
+
+    os.str("");
+    MVPolyType<2, PrimeField>::type p1("[[1 1] [1 1 1]]");
+
+    os << makePowerPrinter< GradedAntilexMonomialOrder >(p1);
+    ASSERT_EQUAL("1 + X^(1, 0) + X^(0, 1) + X^(1, 1) + X^(1, 2)",
+            os.str());
 }
 
 
@@ -315,6 +352,7 @@ void runSuite(){
     PolyIOSuite.push_back(CUTE(inputTestForNPolyOverGF));
     PolyIOSuite.push_back(CUTE(polySubscript));
     PolyIOSuite.push_back(CUTE(testPolyToDegCoefMapConversion));
+    PolyIOSuite.push_back(CUTE(polyPowerPrinting));
     cute::ide_listener lis;
     cute::makeRunner(lis)(PolyIOSuite, "The Polynomial Input-Output Suite");
 
@@ -341,6 +379,6 @@ void runSuite(){
 
 }  // namespace TestMVPoly
 
-int main(){
+int main() {
     TestMVPoly::runSuite();
 }
