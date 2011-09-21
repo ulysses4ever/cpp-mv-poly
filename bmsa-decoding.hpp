@@ -9,6 +9,7 @@
 #define BMSA_DECODING_HPP_
 
 #include <array>
+#include <map>
 #include <vector>
 
 #include "Point.hpp"
@@ -27,8 +28,7 @@ template<
     typename Field,
     template <typename PointImpl> class OrderPolicy = GradedAntilexMonomialOrder
 >
-class BMSDecoding :
-    BMSAlgorithm<typename MVPolyType<Dim, Field>::type, OrderPolicy> {
+class BMSDecoding {
 
 public:
 
@@ -38,7 +38,15 @@ public:
 
 private:
 
+    typedef std::map< Point<Dim, OrderPolicy>, Field> SyndromeType;
+
+    size_t a;
+
     CurvePointsCollection points;
+
+    //FieldElemsCollection * r = 0;
+
+    //BMSAlgorithm<typename MVPolyType<Dim, Field>::type, OrderPolicy> * bmsa = 0;
 
     // compute roots of elements in F
     CurvePointsCollection
@@ -53,19 +61,40 @@ private:
 
     }
 
-    void computeErrorLocatorPolynomials() {
+    // Feng-Rao majority voting
+    void frmv() {
 
+    }
+
+    void computeErrorLocatorPolynomials(FieldElemsCollection const & r) {
+        int i = 0;
+        Point<Dim, OrderPolicy> k, synLength;
+        SyndromeType syn;
+        // compute known syndrome length on the basis of code parameter 'a'
+        for (int i = 0; i < a; ++i) {
+            syn[k] = in_prod(expPoints(k), r);
+            ++k;
+        }
+        //BMSAlgorithm< SyndromeType, MVPolyType<Dim, Field>::type >
+            // bmsa(syn, synLength);
+
+        while(true) { // TODO: define stop condition
+            frmv();
+            ++k; // TODO: ++ should be correctly implemented for given OrderPolicy
+        }
     }
 
 public:
 
     BMSDecoding(
-            CurvePointsCollection const & points) : points(points) {}
+            size_t a,
+            CurvePointsCollection const & points)
+    : a(a), points(points) {}
 
     FieldElemsCollection decode(FieldElemsCollection const & r) {
-        computeErrorLocatorPolynomials();
+        computeErrorLocatorPolynomials(r);
         CurvePointsCollection locations = getErrorLocations();
-        FieldElemsCollection values = getErrorValues(r, locations);
+        FieldElemsCollection values = getErrorValues(locations);
         // correct r with locators and values...
     }
 }; // BMSDecoding
