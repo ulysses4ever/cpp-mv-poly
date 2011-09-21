@@ -24,7 +24,8 @@
 #include <boost/foreach.hpp>
 //#include <boost/lexical_cast.hpp>
 
-#include <lpsolve/lp_lib.h>
+//#include <lpsolve/lp_lib.h>
+#include <glpk.h>
 
 #include "Utilities.hpp"
 
@@ -226,37 +227,53 @@ template <int a, int b>
 class LpSolveHolder {
     static const int dim = 2;
 
-    lprec *lp;
+    glp_prob *lp;
+
+    glp_iocp parm;
 
 public:
     LpSolveHolder() {
-        int majorversion, minorversion, release, build;
+        const int ne = 2;
+        int ia[1 + ne], ja[1 + ne];
+        double ar[1 + ne];
 
-        lp_solve_version(&majorversion, &minorversion, &release, &build);
-        if ((lp=make_lp(0,  dim)) == NULL) // 2 <- 2d-task
-            ERROR();
-//        set_verbose(lp, CRITICAL);
-        std::ostringstream oss;
-        oss << a << " " << b;
-        char * p_data = const_cast<char *>(oss.str().c_str());
-        // std::cout << s << std::endl;
-        if (!str_add_constraint(lp, p_data, GE, 0)) // p(X) >= min
-          ERROR();
-        if (!str_set_obj_fn(lp, p_data))
-          ERROR();
-        set_upbo(lp, 1, a + 1);
+        lp = glp_create_prob();
+
+        glp_set_obj_dir(lp, GLP_MIN);
+
+        glp_add_rows(lp, 1);
+
+        glp_add_cols(lp, 2);
+        glp_set_col_bnds(lp, 1, GLP_LO, 0.0, 0.0); // x1
+        glp_set_col_bnds(lp, 2, GLP_LO, 0.0, 0.0); // x2
+
+        glp_set_col_kind(lp, 1, GLP_IV);
+        glp_set_col_kind(lp, 2, GLP_IV);
+
+        glp_set_obj_coef(lp, 1, a);
+        glp_set_obj_coef(lp, 2, b);
+
+        ia[1] = 1, ja[1] = 1, ar[1] = a;
+        ia[2] = 1, ja[2] = 2, ar[2] = b;
+
+        glp_load_matrix(lp, 2, ia, ja, ar);
+        //glp_simplex(lp, NULL);
+        glp_init_iocp(&parm);
+        parm.presolve = GLP_ON;
+
+
     }
 
     template <typename Cont>
     void lpInc(Cont & c) {
-        int l = a*c[0] + b*c[1] + 1;
-        set_rh(lp, 1, l);
-        //set_upbo(lp, 2, l);
-        solve(lp);
-        REAL vars[dim];
-        get_variables(lp, vars);
-        c[0] = round(vars[0]);
-        c[1] = round(vars[1]);
+        glp_set_row_bnds(lp, 1, GLP_LO, c[0]*a + c[1]*b + 1, 0.0);
+        glp_intopt(lp, &parm);
+        c[0] = glp_mip_col_val(lp, 1);
+        c[1] = glp_mip_col_val(lp, 2);
+    }
+
+    ~LpSolveHolder() {
+        glp_delete_prob(lp);
     }
 };
 
