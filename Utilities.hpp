@@ -13,6 +13,11 @@
 
 #define ARR_LEN(arr) (sizeof(arr) / sizeof(*(arr)))
 
+//# if defined ERROR
+//#   undef ERROR
+//# endif
+//# define ERROR() { fprintf(stderr, "Error\n"); exit(1); }
+
 namespace mv_poly {
 
 template<typename T1, typename T2>
