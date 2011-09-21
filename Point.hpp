@@ -13,16 +13,37 @@
 #include <iterator>
 #include <iostream>
 #include <memory>
+#include <sstream>
+#include <string>
+
+#include <cstdio>
 
 #include <tr1/array>
 #include <tr1/functional>
 
 #include <boost/foreach.hpp>
+//#include <boost/lexical_cast.hpp>
+
+#include <lpsolve/lp_lib.h>
+
+#include "Utilities.hpp"
 
 namespace mv_poly {
 
 template<typename PointImpl>
 struct GradedAntilexMonomialOrder;
+
+template<
+    int Dim,
+    template <typename> class OrderPolicy
+        = GradedAntilexMonomialOrder
+>
+class Point;
+
+template<int Dim, template <typename> class OrderPolicy>
+bool operator==(
+        Point<Dim, OrderPolicy> const & lhs,
+        Point<Dim, OrderPolicy> const & rhs);
 
 /**
  * \class Point
@@ -32,8 +53,8 @@ struct GradedAntilexMonomialOrder;
 template<
     int Dim,
     template <typename PointImpl> class OrderPolicy
-        = GradedAntilexMonomialOrder>
-class Point : OrderPolicy< std::tr1::array<int, Dim> > {
+//        = GradedAntilexMonomialOrder
+> class Point : OrderPolicy< std::tr1::array<int, Dim> > {
 
     typedef typename Point::PointImplType ImplType; // PointImplType inherited
                                             // from GradedAntilexMonomialOrder
@@ -132,11 +153,19 @@ public:
      * false otherwise.
      */
     friend
-    bool operator==(Point<Dim> const & lhs, Point<Dim> const & rhs) {
-        return lhs.data == rhs.data;
-    }
+    bool operator==<>(
+            Point<Dim, OrderPolicy> const & lhs,
+            Point<Dim, OrderPolicy> const & rhs);
+;
 
 }; // class Point
+
+template<int Dim, template <typename> class OrderPolicy>
+bool operator==(
+        Point<Dim, OrderPolicy> const & lhs,
+        Point<Dim, OrderPolicy> const & rhs) {
+   return lhs.data == rhs.data;
+}
 
 /**
  * Summs up elements of a given container \c c.
@@ -192,6 +221,77 @@ struct GradedAntilexMonomialOrder {
         }
     }
 };
+
+template <int a, int b>
+class LpSolveHolder {
+    static const int dim = 2;
+
+    lprec *lp;
+
+public:
+    LpSolveHolder() {
+        int majorversion, minorversion, release, build;
+
+        lp_solve_version(&majorversion, &minorversion, &release, &build);
+        if ((lp=make_lp(0,  dim)) == NULL) // 2 <- 2d-task
+            ERROR();
+//        set_verbose(lp, CRITICAL);
+        std::ostringstream oss;
+        oss << a << " " << b;
+        char * p_data = const_cast<char *>(oss.str().c_str());
+        // std::cout << s << std::endl;
+        if (!str_add_constraint(lp, p_data, GE, 0)) // p(X) >= min
+          ERROR();
+        if (!str_set_obj_fn(lp, p_data))
+          ERROR();
+        set_upbo(lp, 1, a + 1);
+    }
+
+    template <typename Cont>
+    void lpInc(Cont & c) {
+        int l = a*c[0] + b*c[1] + 1;
+        set_rh(lp, 1, l);
+        //set_upbo(lp, 2, l);
+        solve(lp);
+        REAL vars[dim];
+        get_variables(lp, vars);
+        c[0] = round(vars[0]);
+        c[1] = round(vars[1]);
+    }
+};
+
+template<int a, int b>
+struct WeightedOrder {
+
+    template<typename PointImpl>
+    struct impl {
+        typedef PointImpl PointImplType;
+
+        static bool totalLess(PointImplType const & lhs, PointImplType const & rhs) {
+            return weight(lhs) < weight(rhs);
+        }
+
+        void inc(PointImplType & data) {
+            lp.lpInc(data);
+        }
+
+
+    private:
+        static LpSolveHolder<a, b> lp;
+
+        static int weight(PointImplType const & data) {
+            return a*data[0] + b*data[1];
+        }
+
+    };
+
+};
+
+template <int a, int b>
+template <typename T>
+LpSolveHolder<a, b>
+WeightedOrder<a, b>::impl<T>::lp = LpSolveHolder<a, b>();
+
 
 /**
  * Simple Point output.
@@ -364,9 +464,12 @@ operator-(Point<Dim, OrderPolicy> lhs, Point<Dim, OrderPolicy> const & rhs) {
  * @return Maximum points with respect to by-coordinate partial order
  * (cf. \c byCoordinateLess) from the \c points.
  */
-template<int Dim, template <typename PointImpl> class OrderPolicy,
+template<
+    int Dim,
+    template <typename PointImpl> class OrderPolicy,
     template<typename T, typename S = std::allocator<T> > class Cont>
-Cont<Point<Dim> > getPartialMaximums(Cont<Point<Dim, OrderPolicy> > const & points) {
+Cont<Point<Dim> >
+getPartialMaximums(Cont<Point<Dim, OrderPolicy> > const & points) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1; // usually we use “using” directive:
     // using namespace std::tr1::placeholders; — but here it yelds some ambiguity
