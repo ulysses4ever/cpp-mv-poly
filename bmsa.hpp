@@ -60,7 +60,7 @@ private:
 
 public:
 
-    void infoUpdate(Point<Dim> const & k) {
+    void infoUpdate(Point<Dim, OrderPolicy> const & k) {
         using std::tr1::bind;
         using std::tr1::cref;
         using namespace std::tr1::placeholders;
@@ -74,12 +74,12 @@ public:
             //searching for candidates to form new deltaPoints
             for (typename PointPolyMap::const_iterator fIt = F.begin();
                     fIt != F.end(); ++fIt) {
-                Point<Dim> const & degF = fIt->first;
+                Point<Dim, OrderPolicy> const & degF = fIt->first;
                 PolynomialT const & f = fIt->second;
                 if (byCoordinateLess(degF, k)) {
                     CoefT b = conv(f, seq, degF, k);
                     discr[degF] = b;
-                    Point<Dim> c = k - degF;
+                    Point<Dim, OrderPolicy> c = k - degF;
                     if (b != ZERO) {
 //                        cout << "failed: " << f << endl;
 //                        cout << "span: " << c << endl;
@@ -113,7 +113,7 @@ public:
                 if (tmpIt != G.end())
                     newG.insert(*tmpIt);
                 else {
-                    Point<Dim> s = k - *cIt;
+                    Point<Dim, OrderPolicy> s = k - *cIt;
                     newG[*cIt] =
                             CoefficientTraits<CoefT>::multInverse(discr[s])
                             * F[s];
@@ -124,13 +124,13 @@ public:
             for (typename PointCollection::const_iterator
                     tIt = sigmaPoints.begin();
                     tIt != sigmaPoints.end(); ++tIt) {
-                Point<Dim> const & t = *tIt;
+                Point<Dim, OrderPolicy> const & t = *tIt;
                 // next find_if will find something for shure — I GUARANTEE IT
-                Point<Dim> s = *(std::find_if(
+                Point<Dim, OrderPolicy> s = *(std::find_if(
                         make_choose_point_iterator(F.begin()),
                         make_choose_point_iterator(F.end()),
                         bind(&byCoordinateLess<Dim, OrderPolicy>, _1, cref(t))));
-                Point<Dim> u = t - s; // valid Point as true == byCoordinateLess(s, t)
+                Point<Dim, OrderPolicy> u = t - s; // valid Point as true == byCoordinateLess(s, t)
 //                cout << "t: " << t << " ";
 //                cout << "s: " << s << " ";
 //                cout << "u: " << u;
@@ -146,7 +146,7 @@ public:
                             ).base();
                     if ((notJustIncreaseDegree = (cIt != G.end()))) {
                         // yes, I mean assignment at the top of if condition
-                        Point<Dim> const & c = cIt->first;
+                        Point<Dim, OrderPolicy> const & c = cIt->first;
                         newF[t] = (F[s] << u) - // Berlekamp formula
                             (discr[s] * G[c] << (c - (k - t)));
                     }
@@ -177,13 +177,13 @@ public:
             Point<Dim, OrderPolicy> const & seqLen_) :
                 ZERO(CoefficientTraits<CoefT>::addId()),
                 seqLen(seqLen_), seq(seq_) {
-        F.insert(std::make_pair(Point<Dim>(), PolynomialT::getId()));
+        F.insert(std::make_pair(Point<Dim, OrderPolicy>(), PolynomialT::getId()));
     }
 
     PolynomialCollection computeMinimalSet() {
         oldDeltaPoints.clear();
         // scanning input sequense step-by-step, following monomial order
-        for (Point<Dim> k; k < seqLen; ++k) {
+        for (Point<Dim, OrderPolicy> k; k < seqLen; ++k) {
             infoUpdate(k);
         }
         return getPolynomialList();
@@ -209,7 +209,7 @@ private:
 
     typedef typename PointPolyMap::value_type PointPolyPair;
 
-    typedef std::tr1::function<Point<Dim> const & (PointPolyPair const &)>
+    typedef std::tr1::function<Point<Dim, OrderPolicy> const & (PointPolyPair const &)>
         ChoosePointFunctor;
 
     template<typename It>
