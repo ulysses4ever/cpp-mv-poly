@@ -244,7 +244,7 @@ public:
         glp_add_rows(lp, 1);
 
         glp_add_cols(lp, 2);
-        glp_set_col_bnds(lp, 1, GLP_LO, 0.0, 0.0); // x1
+        glp_set_col_bnds(lp, 1, GLP_DB, 0.0, b - 1); // x1
         glp_set_col_bnds(lp, 2, GLP_LO, 0.0, 0.0); // x2
 
         glp_set_col_kind(lp, 1, GLP_IV);
@@ -260,8 +260,6 @@ public:
         //glp_simplex(lp, NULL);
         glp_init_iocp(&parm);
         parm.presolve = GLP_ON;
-
-
     }
 
     template <typename Cont>
