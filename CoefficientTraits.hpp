@@ -11,13 +11,14 @@
 #define COEFFICIENTTRAITS_HPP_
 
 #include <boost/mpl/contains.hpp>
-#include <boost/mpl/vector.hpp>
 #include <boost/utility/enable_if.hpp>
 
 #include <NTL/GF2.h>
 #include <NTL/GF2E.h>
 #include <NTL/ZZ_p.h>
 #include <NTL/ZZ_pE.h>
+
+#include "NtlUtilities.hpp"
 
 namespace mv_poly {
 
@@ -67,9 +68,6 @@ struct CoefficientTraits {
         return CoefT();
     }
 };
-
-typedef boost::mpl::vector<NTL::GF2E, NTL::ZZ_pE, NTL::GF2, NTL::ZZ_p>
-    NtlFieldTypes;
 
 /**
  * CoefficientTraits template specialization for NTL field types
