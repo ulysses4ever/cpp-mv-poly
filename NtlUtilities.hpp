@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 #include <cmath>
 
@@ -26,7 +27,51 @@
 #include <NTL/ZZ_pE.h>
 #include <NTL/ZZ_pX.h>
 
-#include "CoefficientTraits.hpp"
+
+typedef boost::mpl::vector<NTL::GF2E, NTL::ZZ_pE, NTL::GF2, NTL::ZZ_p>
+    NtlFieldTypes;
+
+
+// to be refactored out into separate file
+template<typename FieldElem, typename Enable = void>
+struct FieldElemTraits {
+    template <typename DecimalType>
+    static FieldElem power(FieldElem const & a, DecimalType n) {
+        throw std::logic_error("NIY");
+    }
+
+    static FieldElem multId() {
+        throw std::logic_error("NIY");
+    }
+
+    static FieldElem addId() {
+        throw std::logic_error("NIY");
+    }
+};
+
+template<typename FieldElem>
+struct FieldElemTraits<
+        FieldElem,
+        typename boost::enable_if<
+            boost::mpl::contains<NtlFieldTypes, FieldElem>
+        >::type > {
+
+    template <typename DecimalType>
+    static FieldElem power(FieldElem const & a, DecimalType n) {
+        return NTL::power(a, n);
+    }
+
+    static FieldElem multId() {
+        FieldElem a;
+        NTL::set(a);
+        return a;
+    }
+
+    static FieldElem addId() {
+        FieldElem zero;
+        return zero;
+    }
+};
 
 template<typename F>
 struct NTLPrimeFieldTtraits {
@@ -107,7 +152,7 @@ class NtlPowerPrinter {
 
     int log(ElemT const & cf) const {
         int result = 0;
-        ElemT pw = mv_poly::CoefficientTraits<ElemT>::multId();
+        ElemT pw = FieldElemTraits<ElemT>::multId();
         while (pw != cf) {
             mul(pw, pw, a);
             ++result;
@@ -133,7 +178,7 @@ class NtlPowerPrinter {
             typename boost::enable_if<
                     boost::mpl::contains<NtlPrimeFieldTypes, CoefT> >::type * = 0
             ) const {
-        return cf == mv_poly::CoefficientTraits<CoefT>::multId() ? "" :
+        return cf == FieldElemTraits<CoefT>::multId() ? "" :
                 boost::lexical_cast<std::string>(cf) + " ";
     }
 
