@@ -8,6 +8,7 @@
 #ifndef CURVEARITHMETIC_HPP_
 #define CURVEARITHMETIC_HPP_
 
+#include <algorithm>
 #include <functional>
 #include <iterator>
 #include <vector>
@@ -79,6 +80,18 @@ getPlainHermitianCurveRationalPoints(int r, FieldElem x) {
     cp[1] = zero;
     result.push_back(cp);
     return result;
+}
+
+/**
+ * Computes p^m ( = p_1^m_1 * p_2^m_2 * ... * p_n^m_n).
+ */
+template<typename FieldElem, typename Monom, typename CurvePoint>
+FieldElem computeMonomAtPoint(Monom const & m, CurvePoint const & p) {
+
+    return std::inner_product(p.begin(), p.end(), m.begin(),
+            FieldElemTraits<FieldElem>::multId(),
+            std::multiplies<FieldElem>(),
+            FieldElemTraits<FieldElem>::template power<typename Monom::value_type>);
 }
 
 } // namespace mv_poly
