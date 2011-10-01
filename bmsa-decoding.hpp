@@ -15,6 +15,7 @@
 #include "Point.hpp"
 #include "bmsa.hpp"
 #include "mv_poly.hpp"
+#include "CurveArithmetic.hpp"
 
 namespace mv_poly {
 
