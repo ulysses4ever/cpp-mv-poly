@@ -55,7 +55,7 @@ template<
     int Dim,
     template <typename PointImpl> class OrderPolicy
 //        = GradedAntilexMonomialOrder
-> class Point : OrderPolicy< std::tr1::array<int, Dim> > {
+> class Point : OrderPolicy< std::tr1::array<long, Dim> > {
 
     typedef typename Point::PointImplType ImplType; // PointImplType inherited
                                             // from GradedAntilexMonomialOrder
@@ -72,6 +72,8 @@ public:
     bool operator<(Point<Dim> const & other) const {
         return totalLess(data, other.data);
     }
+
+    typedef typename ImplType::value_type value_type;
 
     typedef typename ImplType::size_type size_type;
 
@@ -233,6 +235,8 @@ class LpSolveHolder {
 
 public:
     LpSolveHolder() {
+        glp_term_out(GLP_OFF);
+
         const int ne = 2;
         int ia[1 + ne], ja[1 + ne];
         double ar[1 + ne];
