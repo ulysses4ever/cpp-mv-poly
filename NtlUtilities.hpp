@@ -146,17 +146,21 @@ class NtlPowerPrinter {
 
     typedef T ElemT;
 
-    ElemT a;
+    const ElemT a;
 
-    ElemT elem;
+    const ElemT elem;
 
     int log(ElemT const & cf) const {
         int result = 0;
         ElemT pw = FieldElemTraits<ElemT>::multId();
+//        std::cout << "element being logarithmed: " << cf << std::endl;
+//        std::cout << "primitive: " << a << std::endl;
         while (pw != cf) {
+//            std::cout << result << "-th power of primitive: " << pw << std::endl;
             mul(pw, pw, a);
             ++result;
         }
+//        std::cout << "answer - " << result << "-th power of primitive: " << pw << std::endl;
         return result;
     }
 
