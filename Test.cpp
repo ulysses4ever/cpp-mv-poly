@@ -5,6 +5,8 @@
 #include <string>
 #include <sstream>
 
+#include <tr1/array>
+
 #include <NTL/ZZ_p.h>
 #include <NTL/GF2.h>
 
@@ -19,6 +21,7 @@
 #include "bmsa.hpp"
 #include "NtlUtilities.hpp"
 #include "NtlPolynomials.hpp"
+#include "CurveArithmetic.hpp"
 
 namespace TestMVPoly {
 
@@ -343,6 +346,46 @@ void polyPowerPrinting() {
             os.str());
 }
 
+void curveArithmetic() {
+    typedef NTL::GF2 PrimeField;
+    typedef typename NTLPrimeFieldTtraits<PrimeField>::ExtField ExtField;
+
+    initExtendedField<PrimeField>("[1 1 0 0 1]");
+    ExtField x = getPrimitive<ExtField>();
+
+    auto cpts = getPlainHermitianCurveRationalPoints
+            < std::tr1::array<ExtField, 2> >(4, x);
+    typedef decltype(cpts) PointsCont;
+    typedef PointsCont::value_type CPt;
+    ASSERT_EQUAL(cpts.size(), 64);
+
+//    cout << makeNtlPowerPrinter(x, cpts[0][0]) << ", "//<< cpts[0][1];
+//            << makeNtlPowerPrinter(x, cpts[0][1]) << endl;
+//
+    auto b = getBasis<4>(16);
+    ASSERT_EQUAL(b.size(), 16);
+    ASSERT(!(b.back()[0] == 0 && b.back()[1] == 0));
+//
+////    cout << b[0][0] << ", " << b[0][1] << endl;
+//    cout << b[1][0] << ", " << b[1][1] << endl;
+////    cout << b[2][0] << ", " << b[2][1] << endl;
+//
+//    cout << "computeMonomAtPoint(): " << makeNtlPowerPrinter(x,
+//            computeMonomAtPoint<ExtField>(b[1], cpts[0])) << endl;
+//
+//    cout << makeNtlPowerPrinter(x,
+//            FieldElemTraits<ExtField>::power<long>(cpts[0][0], b[1][0])) << endl;
+//    cout << //makeNtlPowerPrinter(x,
+//            FieldElemTraits<ExtField>::power<long>(cpts[0][1], b[1][1])/*)*/ << endl;
+    std::tr1::array<int, 2> m;
+    m[0] = 4; m[1] = 0;
+    CPt cp;
+    cp[0] = x;
+    cp[1] = ExtField();
+    ASSERT_EQUAL(computeMonomAtPoint<ExtField>(m, cp), // x^4 = x + 1
+            NTL::power(x, 1) + NTL::power(x, 0));
+}
+
 
 void runSuite(){
     cute::suite PolyIOSuite;
@@ -375,6 +418,11 @@ void runSuite(){
     bmsaTestingSuite.push_back(sakatasExamples);
     cute::makeRunner(lis)(bmsaTestingSuite,
                 "The BMS-algorithm Testing Suite");
+
+    cute::suite bmsaDecoding;
+    bmsaDecoding.push_back(curveArithmetic);
+    cute::makeRunner(lis)(bmsaDecoding,
+                "The BMS-algorithm-based Decoding Algorithm Testing Suite");
 }
 
 }  // namespace TestMVPoly
