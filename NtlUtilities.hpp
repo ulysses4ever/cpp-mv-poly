@@ -71,7 +71,40 @@ struct FieldElemTraits<
         FieldElem zero;
         return zero;
     }
+
+    static FieldElem getPrimitive() {
+        if (!isPrimitiveInitialized)
+            throw std::logic_error("Primitive element is not initialized!");
+        return prim;
+    }
+
+    static void setPrimitive(FieldElem const & p) {
+        prim = p;
+        isPrimitiveInitialized = true;
+    }
+
+private:
+    static bool isPrimitiveInitialized;
+
+    static FieldElem prim;
+
 };
+
+template<typename FieldElem>
+bool
+FieldElemTraits<
+        FieldElem,
+        typename boost::enable_if<
+            boost::mpl::contains<NtlFieldTypes, FieldElem>
+        >::type >::isPrimitiveInitialized = false;
+
+template<typename FieldElem>
+FieldElem
+FieldElemTraits<
+        FieldElem,
+        typename boost::enable_if<
+            boost::mpl::contains<NtlFieldTypes, FieldElem>
+        >::type >::prim;
 
 template<typename F>
 struct NTLPrimeFieldTtraits {
@@ -153,14 +186,10 @@ class NtlPowerPrinter {
     int log(ElemT const & cf) const {
         int result = 0;
         ElemT pw = FieldElemTraits<ElemT>::multId();
-//        std::cout << "element being logarithmed: " << cf << std::endl;
-//        std::cout << "primitive: " << a << std::endl;
         while (pw != cf) {
-//            std::cout << result << "-th power of primitive: " << pw << std::endl;
             mul(pw, pw, a);
             ++result;
         }
-//        std::cout << "answer - " << result << "-th power of primitive: " << pw << std::endl;
         return result;
     }
 
@@ -188,7 +217,8 @@ class NtlPowerPrinter {
 
  public:
 
-    NtlPowerPrinter(ElemT const & a, ElemT const & elem) : a(a), elem(elem) {}
+    NtlPowerPrinter(ElemT const & elem) :
+        a(FieldElemTraits<ElemT>::getPrimitive()), elem(elem) {}
 
     friend
     std::ostream & operator<<(
@@ -202,8 +232,8 @@ class NtlPowerPrinter {
 
 template<typename ElemT>
 inline
-NtlPowerPrinter<ElemT> makeNtlPowerPrinter(ElemT const & a, ElemT const & elem) {
-    return NtlPowerPrinter<ElemT>(a, elem);
+NtlPowerPrinter<ElemT> makeNtlPowerPrinter(ElemT const & elem) {
+    return NtlPowerPrinter<ElemT>(elem);
 }
 
 #endif /* NTLUTILITIES_HPP_ */
