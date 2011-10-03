@@ -65,7 +65,7 @@ class PowerPolyPrinter {
             typename PointCoefMap::value_type const & pt_cf = *it;
             if (pt_cf.second != CoefT::zero()) {
                 const std::string strCoef = boost::lexical_cast<std::string>(
-                        makeNtlPowerPrinter(pp.a, pt_cf.second));
+                        makeNtlPowerPrinter(pt_cf.second));
                 if (pt_cf.first == PointT()) {
                     os << (strCoef == "" ? "1 " : strCoef) + "+ ";
                 } else
@@ -74,7 +74,7 @@ class PowerPolyPrinter {
             }
         }
         typename PointCoefMap::value_type const & pt_cf = *(--pp.data.end());
-        os << makeNtlPowerPrinter(pp.a, pt_cf.second)
+        os << makeNtlPowerPrinter(pt_cf.second)
                                 << "X^" << pt_cf.first;
         return os;
     }
