@@ -22,19 +22,19 @@ namespace mv_poly {
 // deadly want template aliases
 // typedef std::vector< Point<N, OrderPolicy> > BasisCollection<N, OrderPolicy>;
 
-template<int r> //, typename OrderPolicy
+template<int r>
 std::vector< Point<2, WeightedOrder<r, r + 1>::template impl > >
-getBasis(int l) {
+getHermitianCodeBasis(int l) {
     typedef Point<2, WeightedOrder<r, r + 1>::template impl > Pt;
     std::vector< Pt > result;
     result.reserve(l);
     Pt p;
-   // std::function<Pt(int)> f(&Pt::operator++);
-    //std::generate_n(std::back_inserter(result), l,
-//            std::bind<Pt, Pt, int>(&Pt::operator++, p);//);
-//            std::bind(std::plus<int>(), 3);
-    while (l-- > 0)
-        result.push_back(p++);
+    std::generate_n(std::back_inserter(result), l,
+            std::bind<Pt (Pt::*)(int)>((&Pt::operator++),
+                    p,
+                    42 /* dummy argument for operator++(int) */));
+//    while (l-- > 0)
+//        result.push_back(p++);
     return result;
 }
 
@@ -47,10 +47,11 @@ bool isPlainHermitianCurveRationalPoint(int r, CurvePoint cp) {
     // TODO: repetitive computations of x^n are ineffective
 }
 
-template<typename CurvePoint, typename FieldElem>
+template<int r, typename CurvePoint, typename FieldElem>
 std::vector<CurvePoint>
-getPlainHermitianCurveRationalPoints(int r, FieldElem x) {
+getPlainHermitianCurveRationalPoints() {
 //    auto power = &FieldElemTraits<FieldElem>::power;
+    FieldElem x = FieldElemTraits<FieldElem>::getPrimitive();
     std::vector<CurvePoint> result;
     FieldElem zero = FieldElemTraits<FieldElem>::addId();
     CurvePoint cp;
@@ -93,6 +94,25 @@ FieldElem computeMonomAtPoint(Monom const & m, CurvePoint const & p) {
             std::multiplies<FieldElem>(),
             FieldElemTraits<FieldElem>::template power<typename Monom::value_type>);
 }
+
+template<int r>
+struct HermitianCodeTraits {
+
+    //template<typename FieldElem, typename CurvePoint>
+    struct impl {
+        static auto getCodeBasis(int l) -> decltype(getHermitianCodeBasis<r>(l)) {
+            return getHermitianCodeBasis<r>(l);
+        }
+
+        template<typename CurvePoint, typename FieldElem>
+        static
+        std::vector<CurvePoint>
+        getRationalPoints() {
+            return getPlainHermitianCurveRationalPoints<r, CurvePoint>();
+        }
+
+    };
+};
 
 } // namespace mv_poly
 
