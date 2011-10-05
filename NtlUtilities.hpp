@@ -9,6 +9,7 @@
 #define NTLUTILITIES_HPP_
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -73,38 +74,38 @@ struct FieldElemTraits<
     }
 
     static FieldElem getPrimitive() {
-        if (!isPrimitiveInitialized)
+        if (!prim_ptr.get())
             throw std::logic_error("Primitive element is not initialized!");
-        return prim;
+        return *prim_ptr;
     }
 
     static void setPrimitive(FieldElem const & p) {
-        prim = p;
-        isPrimitiveInitialized = true;
+        prim_ptr.reset(new FieldElem(p));
+//        isPrimitiveInitialized = true;
     }
 
 private:
-    static bool isPrimitiveInitialized;
+//    static bool isPrimitiveInitialized;
 
-    static FieldElem prim;
+    static std::shared_ptr<FieldElem> prim_ptr;
 
 };
 
-template<typename FieldElem>
-bool
-FieldElemTraits<
-        FieldElem,
-        typename boost::enable_if<
-            boost::mpl::contains<NtlFieldTypes, FieldElem>
-        >::type >::isPrimitiveInitialized = false;
+//template<typename FieldElem>
+//bool
+//FieldElemTraits<
+//        FieldElem,
+//        typename boost::enable_if<
+//            boost::mpl::contains<NtlFieldTypes, FieldElem>
+//        >::type >::isPrimitiveInitialized = false;
 
 template<typename FieldElem>
-FieldElem
+std::shared_ptr<FieldElem>
 FieldElemTraits<
         FieldElem,
         typename boost::enable_if<
             boost::mpl::contains<NtlFieldTypes, FieldElem>
-        >::type >::prim;
+        >::type >::prim_ptr;
 
 template<typename F>
 struct NTLPrimeFieldTtraits {
@@ -123,6 +124,18 @@ struct NTLPrimeFieldTtraits<NTL::GF2> {
     static int Char() {return 2;}
 };
 
+/**
+ * Builds primitive element of field ExtF providing that it was constructed
+ * using _primitive_ polynomial.
+ * @return primitive element of ExtF field.
+ */
+template<typename ExtF>
+ExtF getPrimitive() {
+    std::istringstream is("[0 1]");
+    ExtF x;
+    is >> x;
+    return x;
+}
 
 /**
  * Initialization of NTL extended field.
@@ -138,21 +151,10 @@ size_t initExtendedField(
     is >> p;
     typedef typename NTLPrimeFieldTtraits<F>::ExtField EF;
     EF::init(p);
+    FieldElemTraits<EF>::setPrimitive(getPrimitive<EF>());
     return pow(NTLPrimeFieldTtraits<F>::Char(), deg(p));
 }
 
-/**
- * Builds primitive element of field ExtF providing that it was constructed
- * using _primitive_ polynomial.
- * @return primitive element of ExtF field.
- */
-template<typename ExtF>
-ExtF getPrimitive() {
-    std::istringstream is("[0 1]");
-    ExtF x;
-    is >> x;
-    return x;
-}
 
 /**
  *
@@ -185,11 +187,17 @@ class NtlPowerPrinter {
 
     int log(ElemT const & cf) const {
         int result = 0;
+//        using std::cout;
+//        using std::endl;
+//        cout << "log_{ " << a << " }( " << cf << " )";
         ElemT pw = FieldElemTraits<ElemT>::multId();
         while (pw != cf) {
+//            cout << " pw: " << pw;
+//            cout << " cf: " << cf;
             mul(pw, pw, a);
             ++result;
         }
+//        cout << "pw: " << pw;
         return result;
     }
 
@@ -200,8 +208,10 @@ class NtlPowerPrinter {
             typename boost::enable_if<
                     boost::mpl::contains<NtlExtFieldTypes, CoefT> >::type * = 0
             ) const {
+        if (cf == FieldElemTraits<CoefT>::addId())
+            return "0";
         int l = log(cf);
-        return 0 == l ? "" : "a^" + boost::lexical_cast<std::string>(l) + " ";
+        return 0 == l ? "1" : "a^" + boost::lexical_cast<std::string>(l);
     }
 
     template<typename CoefT>
@@ -211,8 +221,7 @@ class NtlPowerPrinter {
             typename boost::enable_if<
                     boost::mpl::contains<NtlPrimeFieldTypes, CoefT> >::type * = 0
             ) const {
-        return cf == FieldElemTraits<CoefT>::multId() ? "" :
-                boost::lexical_cast<std::string>(cf) + " ";
+        return boost::lexical_cast<std::string>(cf);
     }
 
  public:
