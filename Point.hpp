@@ -69,7 +69,7 @@ public:
         data.assign(0);
     }
 
-    bool operator<(Point<Dim> const & other) const {
+    bool operator<(Point<Dim, OrderPolicy> const & other) const {
         return totalLess(data, other.data);
     }
 
@@ -290,7 +290,7 @@ struct WeightedOrder {
             return weight(lhs) < weight(rhs);
         }
 
-        void inc(PointImplType & data) {
+        static void inc(PointImplType & data) {
             lp.lpInc(data);
         }
 
