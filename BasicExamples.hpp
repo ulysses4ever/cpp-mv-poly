@@ -151,7 +151,7 @@ void testCoxEtAl05() {
     // [[[]] [[1 1]] [[1]]] ~ (x_1)^2 + (a^2)x_1
 
     BOOST_FOREACH(PolyT const & f, minset) {
-        cout << makePowerPrinter< GradedAntilexMonomialOrder >(f, x) << endl;
+        cout << makePowerPrinter< GradedAntilexMonomialOrder >(f) << endl;
     }
 
 
@@ -276,7 +276,7 @@ void testSakataEtAl95() {
 //                std::ostream_iterator<PolyT>(cout, "\n"));
     for (std::list<PolyT>::const_iterator it = minset.begin();
             it != minset.end(); ++it) {
-        cout << makePowerPrinter< GradedAntilexMonomialOrder >(*it, x)
+        cout << makePowerPrinter< GradedAntilexMonomialOrder >(*it)
                 << endl;
     }
 
