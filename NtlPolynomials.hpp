@@ -30,6 +30,19 @@ namespace mv_poly {
 typedef boost::mpl::vector<NTL::GF2E, NTL::ZZ_pE> NtlExtFieldTypes;
 typedef boost::mpl::vector<NTL::GF2, NTL::ZZ_p> NtlPrimeFieldTypes;
 
+template<typename CoefT>
+std::string coefToString(CoefT const & cf, typename boost::enable_if<
+        boost::mpl::contains<NtlExtFieldTypes, CoefT> >::type * = 0) {
+    return boost::lexical_cast<std::string>(
+                           makeNtlPowerPrinter(cf));
+}
+
+template<typename CoefT>
+std::string coefToString(CoefT const & cf, typename boost::enable_if<
+        boost::mpl::contains<NtlPrimeFieldTypes, CoefT> >::type * = 0) {
+    return boost::lexical_cast<std::string>(cf);
+}
+
 /**
  * Effector (cf. Eckel, TIC++ vol. 2, ch. 4) that takes a polynomial ‘p’
  * and a field primitive element ‘a’ to print ‘p’ in a “pretty” form:
@@ -44,13 +57,33 @@ class PowerPolyPrinter {
 
     typedef std::map<PointT, CoefT> PointCoefMap;
 
-    CoefT a;
-
     PointCoefMap data;
 
- public:
+    void print(std::ostream & os) const {
+        if (data.empty())
+            return;
+        for(typename PointCoefMap::const_iterator it = data.begin();
+                it != --data.end(); ++it) {
+            typename PointCoefMap::value_type const & pt_cf = *it;
+            if (pt_cf.second != CoefT::zero()) {
+                const std::string strCoef = coefToString(pt_cf.second);
+                if (pt_cf.first == PointT()) {
+                    os << strCoef + " + ";
+                } else
+                    os << (pt_cf.second == FieldElemTraits<CoefT>::multId()
+                                ? "" : strCoef + " ")
+                            << "X^" << pt_cf.first << " + ";
+            }
+        }
+        typename PointCoefMap::value_type const & pt_cf = *(--data.end());
+        const std::string strCoef = coefToString(pt_cf.second);
+        os << (pt_cf.second == FieldElemTraits<CoefT>::multId()
+                ? "" : strCoef + " ") << "X^" << pt_cf.first;
+    }
 
-    PowerPolyPrinter(Polynomial<T> const & p, CoefT const & a) : a(a) {
+public:
+
+    PowerPolyPrinter(Polynomial<T> const & p) {
         data = polyToDegCoefMap<OrderPolicy>(p);
     }
 
@@ -58,24 +91,7 @@ class PowerPolyPrinter {
     std::ostream & operator<<(
             std::ostream & os,
             PowerPolyPrinter const & pp) {
-        if (pp.data.empty())
-            return os;
-        for(typename PointCoefMap::const_iterator it = pp.data.begin();
-                it != --pp.data.end(); ++it) {
-            typename PointCoefMap::value_type const & pt_cf = *it;
-            if (pt_cf.second != CoefT::zero()) {
-                const std::string strCoef = boost::lexical_cast<std::string>(
-                        makeNtlPowerPrinter(pt_cf.second));
-                if (pt_cf.first == PointT()) {
-                    os << (strCoef == "" ? "1 " : strCoef) + "+ ";
-                } else
-                    os << strCoef
-                            << "X^" << pt_cf.first << " + ";
-            }
-        }
-        typename PointCoefMap::value_type const & pt_cf = *(--pp.data.end());
-        os << makeNtlPowerPrinter(pt_cf.second)
-                                << "X^" << pt_cf.first;
+        pp.print(os);
         return os;
     }
 
@@ -84,10 +100,8 @@ class PowerPolyPrinter {
 template<template <typename> class OrderPolicy, typename T>
 PowerPolyPrinter<OrderPolicy, T>
 makePowerPrinter(
-        Polynomial<T> const & p,
-        typename Polynomial<T>::CoefT const & x
-            = CoefficientTraits<typename Polynomial<T>::CoefT>::addId()) {
-    return PowerPolyPrinter<OrderPolicy, T>(p, x);
+        Polynomial<T> const & p) {
+    return PowerPolyPrinter<OrderPolicy, T>(p);
 }
 
 } // namespace mv_poly
