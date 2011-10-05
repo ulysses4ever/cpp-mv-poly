@@ -335,7 +335,7 @@ void polyPowerPrinting() {
     MVPolyType<2, ExtField>::type
         p("[[[1]] [[1 1]]]"); //[1 0 1 1] [0 1 1] [1 1] [1] [0]
 
-    os << makePowerPrinter< GradedAntilexMonomialOrder >(p, x);
+    os << makePowerPrinter< GradedAntilexMonomialOrder >(p);
     ASSERT_EQUAL("1 + a^2 X^(1, 0)", os.str());
 
     os.str("");
@@ -351,10 +351,12 @@ void curveArithmetic() {
     typedef typename NTLPrimeFieldTtraits<PrimeField>::ExtField ExtField;
 
     initExtendedField<PrimeField>("[1 1 0 0 1]");
-    ExtField x = getPrimitive<ExtField>();
+    ExtField x = FieldElemTraits<ExtField>::getPrimitive();
+
 
     auto cpts = getPlainHermitianCurveRationalPoints
-            < std::tr1::array<ExtField, 2> >(4, x);
+            < 4, std::tr1::array<ExtField, 2>, ExtField
+            >();
     typedef decltype(cpts) PointsCont;
     typedef PointsCont::value_type CPt;
     ASSERT_EQUAL(cpts.size(), 64);
@@ -362,7 +364,7 @@ void curveArithmetic() {
 //    cout << makeNtlPowerPrinter(x, cpts[0][0]) << ", "//<< cpts[0][1];
 //            << makeNtlPowerPrinter(x, cpts[0][1]) << endl;
 //
-    auto b = getBasis<4>(16);
+    auto b = getHermitianCodeBasis<4>(16);
     ASSERT_EQUAL(b.size(), 16);
     ASSERT(!(b.back()[0] == 0 && b.back()[1] == 0));
 //
