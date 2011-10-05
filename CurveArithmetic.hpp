@@ -55,32 +55,35 @@ getPlainHermitianCurveRationalPoints() {
     FieldElem x = FieldElemTraits<FieldElem>::getPrimitive();
     std::vector<CurvePoint> result;
     FieldElem zero = FieldElemTraits<FieldElem>::addId();
+    FieldElem id = FieldElemTraits<FieldElem>::multId();
     CurvePoint cp;
-    cp[0] = x;
-    do {
-        cp[1] = x;
-        do {
-            if (isPlainHermitianCurveRationalPoint<FieldElem>(r, cp)) {
-                result.push_back(cp);
-            }
-            cp[1] *= x;
-        } while (cp[1] != x);
-
-        cp[0] *= x;
-    } while (cp[0] != x);
 
     cp[0] = zero;
-    cp[1] = x;
+    cp[1] = zero;
+    result.push_back(cp);
+
+    cp[0] = zero;
+    cp[1] = id;
     do {
         if (isPlainHermitianCurveRationalPoint<FieldElem>(r, cp)) {
             result.push_back(cp);
         }
         cp[1] *= x;
-    } while (cp[1] != x);
+    } while (cp[1] != id);
 
-    cp[0] = zero;
-    cp[1] = zero;
-    result.push_back(cp);
+    cp[0] = id;
+    do {
+        cp[1] = id;
+        do {
+            if (isPlainHermitianCurveRationalPoint<FieldElem>(r, cp)) {
+                result.push_back(cp);
+            }
+            cp[1] *= x;
+        } while (cp[1] != id);
+
+        cp[0] *= x;
+    } while (cp[0] != id);
+
     return result;
 }
 
