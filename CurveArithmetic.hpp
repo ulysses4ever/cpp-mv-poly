@@ -8,6 +8,7 @@
 #ifndef CURVEARITHMETIC_HPP_
 #define CURVEARITHMETIC_HPP_
 
+#include <array>
 #include <algorithm>
 #include <functional>
 #include <iterator>
@@ -95,7 +96,7 @@ FieldElem computeMonomAtPoint(Monom const & m, CurvePoint const & p) {
             FieldElemTraits<FieldElem>::template power<typename Monom::value_type>);
 }
 
-template<int r>
+template<int r, typename FieldElem>
 struct HermitianCodeTraits {
 
     //template<typename FieldElem, typename CurvePoint>
@@ -104,11 +105,17 @@ struct HermitianCodeTraits {
             return getHermitianCodeBasis<r>(l);
         }
 
-        template<typename CurvePoint, typename FieldElem>
+        typedef decltype(getCodeBasis(42)) BasisCollection;
+
+        typedef typename BasisCollection::value_type BasisElem;
+
+        typedef std::array<FieldElem, 2> CurvePoint;
+
+//        template<typename CurvePoint, typename FieldElem>
         static
         std::vector<CurvePoint>
         getRationalPoints() {
-            return getPlainHermitianCurveRationalPoints<r, CurvePoint>();
+            return getPlainHermitianCurveRationalPoints<r, CurvePoint, FieldElem>();
         }
 
     };
