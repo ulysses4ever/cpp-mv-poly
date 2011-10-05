@@ -81,6 +81,8 @@ private:
     void computeErrorLocatorPolynomials(FieldElemsCollection const & received) {
         SyndromeType syn;
         auto basis = ECCodeTraits::getCodeBasis(l);
+//        std::copy(basis.begin(), basis.end(),
+//                std::ostream_iterator<BasisElem>(std::cout, " "));
 
         using namespace std::tr1::placeholders;
         auto syndromComponentAtBasisElem =
@@ -98,14 +100,11 @@ private:
         };
         std::transform(basis.begin(), basis.end(),
                 std::inserter(syn, syn.begin()), syndromComponentAtBasisElem);
-        std::for_each(syn.begin(), syn.end(),
-                [](typename SyndromeType::value_type const & s) {
-            std::cout << makeNtlPowerPrinter(s.second) << " ";
-
-        });
-        //        auto sn = f(basis[0]);
-        //        std::cout << "syn[0]: " << //makeNtlPowerPrinter(
-        //                   sn/*)*/ << std::endl;
+//        std::for_each(syn.begin(), syn.end(),
+//                [](typename SyndromeType::value_type const & s) {
+//            std::cout << makeNtlPowerPrinter(s.second) << " ";
+//
+//        });
 
         //BMSAlgorithm< SyndromeType, MVPolyType<Dim, Field>::type >
             // bmsa(syn, synLength);
