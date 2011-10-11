@@ -56,7 +56,7 @@ private:
 
     PointPolyMap F;
 
-    SeqT const & seq;
+    SeqT & seq;
 
 public:
 
@@ -72,10 +72,10 @@ public:
             PointCollection deltaPoints, sigmaPoints;
             PointCoefMap discr; // discrepancies
             //searching for candidates to form new deltaPoints
-            for (typename PointPolyMap::const_iterator fIt = F.begin();
+            for (typename PointPolyMap::iterator fIt = F.begin();
                     fIt != F.end(); ++fIt) {
                 Point<Dim, OrderPolicy> const & degF = fIt->first;
-                PolynomialT const & f = fIt->second;
+                PolynomialT & f = fIt->second;
                 if (byCoordinateLess(degF, k)) {
                     CoefT b = conv(f, seq, degF, k);
                     discr[degF] = b;
@@ -173,7 +173,7 @@ public:
     typedef std::list< PolynomialT > PolynomialCollection;
 
     BMSAlgorithm(
-            SeqT const & seq_,
+            SeqT & seq_,
             Point<Dim, OrderPolicy> const & seqLen_) :
                 ZERO(CoefficientTraits<CoefT>::addId()),
                 seqLen(seqLen_), seq(seq_) {
