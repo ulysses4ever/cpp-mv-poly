@@ -100,28 +100,30 @@ FieldElem computeMonomAtPoint(Monom const & m, CurvePoint const & p) {
 }
 
 template<int r, typename FieldElem>
-struct HermitianCodeTraits {
+struct HermitianCodeParams {
 
-    //template<typename FieldElem, typename CurvePoint>
-    struct impl {
-        static auto getCodeBasis(int l) -> decltype(getHermitianCodeBasis<r>(l)) {
-            return getHermitianCodeBasis<r>(l);
-        }
+    typedef WeightedOrder<r, r + 1> OrderPolicyHolder;
 
-        typedef decltype(getCodeBasis(42)) BasisCollection;
+    typedef decltype(getHermitianCodeBasis<r>(42)) BasisCollection;
 
-        typedef typename BasisCollection::value_type BasisElem;
+    typedef typename BasisCollection::value_type BasisElem;
 
-        typedef std::array<FieldElem, 2> CurvePoint;
+    typedef std::array<FieldElem, 2> CurvePoint;
+
+    typedef decltype(getPlainHermitianCurveRationalPoints<r,
+            CurvePoint, FieldElem>()) CurvePointsCollection;
 
 //        template<typename CurvePoint, typename FieldElem>
-        static
-        std::vector<CurvePoint>
-        getRationalPoints() {
-            return getPlainHermitianCurveRationalPoints<r, CurvePoint, FieldElem>();
-        }
+    static BasisCollection getCodeBasis(int l) {
+        return getHermitianCodeBasis<r>(l);
+    }
 
-    };
+    static
+    CurvePointsCollection
+    getRationalPoints() {
+        return getPlainHermitianCurveRationalPoints<r, CurvePoint, FieldElem>();
+    }
+
 };
 
 } // namespace mv_poly
