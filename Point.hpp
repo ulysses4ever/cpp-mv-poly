@@ -487,7 +487,7 @@ template<
     int Dim,
     template <typename PointImpl> class OrderPolicy,
     template<typename T, typename S = std::allocator<T> > class Cont>
-Cont<Point<Dim> >
+Cont<Point<Dim, OrderPolicy> >
 getPartialMaximums(Cont<Point<Dim, OrderPolicy> > const & points) {
     using std::tr1::bind;
     using std::tr1::placeholders::_1; // usually we use “using” directive:
@@ -568,8 +568,8 @@ getConjugatePointCollection(Cont<Point<Dim, OrderPolicy> > const & points) {
     //function<int (Point<Dim>)> pointWeight = bind(&Point<Dim>::weight, _1);
     int max_weight = weight(*std::max_element(points.begin(), points.end(),
             std::tr1::bind(std::less<int>(),
-                    std::tr1::bind(&weight< Point<Dim> >, _1),
-                    std::tr1::bind(&weight< Point<Dim> >, _2))));
+                    std::tr1::bind(&weight< Point<Dim, OrderPolicy> >, _1),
+                    std::tr1::bind(&weight< Point<Dim, OrderPolicy> >, _2))));
     Point<Dim, OrderPolicy> upperPoint;
     upperPoint[0] = max_weight + 2;
     Cont< Point<Dim, OrderPolicy> > approxSigmaSet;
