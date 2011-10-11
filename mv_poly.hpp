@@ -424,8 +424,8 @@ template<typename ResT, typename SeqT1, typename SeqT2, typename PointT>
 inline
 ResT
 conv(
-        SeqT1 const & f,
-        SeqT2 const & u,
+        SeqT1 /*const*/ & f,
+        SeqT2 /*const*/ & u,
         PointT const & degf,
         PointT const & m) {
     assert( byCoordinateLess(degf, m) );
@@ -446,8 +446,8 @@ template<typename SeqT1, typename SeqT2, typename PointT>
 inline
 typename SeqT1::mapped_type
 conv(
-        SeqT1 const & f,
-        SeqT2 const & u,
+        SeqT1 /*const*/ & f,
+        SeqT2 /*const*/ & u,
         PointT const & degf,
         PointT const & m) {
     return conv<typename SeqT1::mapped_type>(f, u, degf, m);
@@ -619,11 +619,11 @@ Polynomial<T> Polynomial<T>::operator<<=(int monomial) {
  * @param c Monomial x^{\c m} to multiply on.
  * @return This polynomial multiplyed on \c x^{\c m}.
  */
-template<typename T>
+template<typename T, template <typename PointImpl> class OrderPolicy>
 inline
 Polynomial<T> operator<<(
         Polynomial<T> p,
-        Point<Polynomial<T>::VAR_CNT> const & m) {
+        Point<Polynomial<T>::VAR_CNT, OrderPolicy> const & m) {
     return p <<= m;
 }
 
