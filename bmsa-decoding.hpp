@@ -68,16 +68,34 @@ private:
 
     CurvePointsCollection curvePoints;
 
+    // compute common roots of elements in F
+    ErrorPositions
+    getErrorLocations(PolynomialCollection const & polys) {
+        typedef typename PolynomialCollection::value_type PolyT;
+        typedef CoefficientTraits<typename PolyT::CoefT> CoefTr;
+        ErrorPositions result;
+        int idx = 1;
+        std::for_each(curvePoints.begin(), curvePoints.end(),
+                [&result,&idx,&polys](CurvePoint const & cp) {
+                    bool root_for_all = std::accumulate(polys.begin(),
+                            polys.end(), true,
+                            [&cp](bool val, PolyT const & p){
+                                return val && p(cp) == CoefTr::addId();
+                            });
+                    if (root_for_all)
+                        result.push_back(idx);
+                    ++idx;
 
+        });
 
-    //FieldElemsCollection * r = 0;
+        // **********  logging
+        std::ostringstream log_oss;
+        std::copy(result.begin(), result.end(),
+                std::ostream_iterator<int>(log_oss, " "));
+        LOG(INFO) << "error positions: " << log_oss.str();
+        // **********  ENF OF logging
 
-    //BMSAlgorithm<typename MVPolyType<Dim, Field>::type, OrderPolicy> * bmsa = 0;
-
-    // compute roots of elements in F
-    CurvePointsCollection
-    getErrorLocations() {
-
+        return result;
     }
 
     FieldElemsCollection
@@ -98,7 +116,7 @@ private:
         auto basis = ECCodeParams::getCodeBasis(l);
 
         // **********  logging
-        ostringstream log_oss;
+        std::ostringstream log_oss;
         std::copy(basis.begin(), basis.end(),
                 std::ostream_iterator<BasisElem>(log_oss, " "));
         LOG(INFO) << log_oss.str();
@@ -163,8 +181,8 @@ public:
 
     FieldElemsCollection decode(FieldElemsCollection const & r) {
         FieldElemsCollection result;
-        computeErrorLocatorPolynomials(r);
-//        CurvePointsCollection locations = getErrorLocations();
+        ErrorPositions locations = getErrorLocations(
+                computeErrorLocatorPolynomials(r));
 //        FieldElemsCollection values = getErrorValues(locations);
         // correct r with locators and values...
         return result;
