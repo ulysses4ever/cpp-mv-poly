@@ -223,6 +223,19 @@ public:
     inline
     bool operator==(Polynomial<S> const & lhs, Polynomial<S> const & rhs);
 
+    CoefT operator()(CoefT const & c) {
+        auto f = [&c](CoefT const & val, CoefT const & a) {
+            return val*c + a;
+        };
+        return std::accumulate(data.rbegin(), data.rend(),
+                CoefficientTraits<CoefT>::addId(), f);
+    }
+
+    template<typename CurvePoint>
+    CoefT operator()(CurvePoint const & cp) {
+
+    }
+
     /**
      * As polynomial is actually a special container type, it has distinguished
      * type for it's elements.
