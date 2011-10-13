@@ -261,6 +261,16 @@ void equality() {
     ASSERT_EQUAL(p, q);
 }
 
+void eval() {
+    mv_poly::MVPolyType<1, int>::type p("[3 2 1]");
+    ASSERT_EQUAL(11, p(2));
+
+    mv_poly::MVPolyType<2, int>::type p1("[[3 2] [1]]");
+    std::vector<int> pt(2);
+    pt[0] = 1; pt[1] = 2;
+    ASSERT_EQUAL(8, p1(pt));
+}
+
 void sakatasExamples() {
     ostringstream os;
     typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
@@ -413,6 +423,7 @@ void runSuite(){
     PolynomialArithmeticSuite.push_back(scalarMultiplication);
     PolynomialArithmeticSuite.push_back(summation);
     PolynomialArithmeticSuite.push_back(equality);
+    PolynomialArithmeticSuite.push_back(eval);
     cute::makeRunner(lis)(PolynomialArithmeticSuite,
             "The Polynomial Arithmetic Suite");
 
