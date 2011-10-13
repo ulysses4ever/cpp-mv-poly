@@ -223,18 +223,10 @@ public:
     inline
     bool operator==(Polynomial<S> const & lhs, Polynomial<S> const & rhs);
 
-    CoefT operator()(CoefT const & c) {
-        auto f = [&c](CoefT const & val, CoefT const & a) {
-            return val*c + a;
-        };
-        return std::accumulate(data.rbegin(), data.rend(),
-                CoefficientTraits<CoefT>::addId(), f);
-    }
+    CoefT operator()(CoefT const & c) const;
 
     template<typename CurvePoint>
-    CoefT operator()(CurvePoint const & cp) {
-
-    }
+    CoefT operator()(CurvePoint const & cp) const;
 
     /**
      * As polynomial is actually a special container type, it has distinguished
@@ -754,6 +746,29 @@ PolyT load_coefs(typename PolyT::CoefT const * coefs[], size_t len, size_t * coe
     PolyT res;
     res.setCoefs(stor);
     return res;
+}
+
+template<typename T>
+typename Polynomial<T>::CoefT
+inline
+Polynomial<T>::operator()(typename Polynomial<T>::CoefT const & c) const {
+    auto f = [&c](CoefT const & val, CoefT const & a) {
+        return val*c + a;
+    };
+    return std::accumulate(data.rbegin(), data.rend(),
+            CoefficientTraits<CoefT>::addId(), f);
+}
+
+template<typename T>
+template<typename CurvePoint>
+inline
+typename Polynomial<T>::CoefT
+Polynomial<T>::operator()(CurvePoint const & cp) const {
+    auto f = [&cp](CoefT const & val, T const & a) {
+        return val*cp[0] + a(make_curve_point_slice(cp));
+    };
+    return std::accumulate(data.rbegin(), data.rend(),
+            CoefficientTraits<CoefT>::addId(), f);
 }
 
 } // namespace mv_poly
