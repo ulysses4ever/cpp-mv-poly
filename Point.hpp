@@ -601,20 +601,20 @@ getConjugatePointCollection(Cont<Point<Dim, OrderPolicy> > const & points) {
  * @param Offset Starting index in initial point to subscript from in
  * the current slice.
  */
-template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
+template<typename Body, int Dim, int Offset>
 class ConstSlice {
-    Point<Dim, OrderPolicy> const & pt;
+    Body const & pt;
 
 public:
-    ConstSlice(Point<Dim, OrderPolicy> const & pt_) : pt(pt_) {}
+    ConstSlice(Body const & pt_) : pt(pt_) {}
 
-    Point<Dim, OrderPolicy> const & getImpl() const {return pt;}
+    Body const & getImpl() const {return pt;}
 
-    operator Point<Dim, OrderPolicy> const &() {return pt;}
+    operator Body const &() {return pt;}
 
-    typedef typename Point<Dim, OrderPolicy>::const_reference const_reference;
+    typedef typename Body::const_reference const_reference;
 
-    typedef typename Point<Dim, OrderPolicy>::size_type size_type;
+    typedef typename Body::size_type size_type;
 
     const_reference
     operator[](size_type n) const {
@@ -624,19 +624,19 @@ public:
 };
 
 /// ConstSlice of the point is “1-slice”, for 1-slice sl[i] ~ pt[i + 1].
-template<int Dim, template <typename PointImpl> class OrderPolicy>
-ConstSlice<Dim, OrderPolicy, 1>
-make_slice(Point<Dim, OrderPolicy> const & pt) {
-    return ConstSlice<Dim, OrderPolicy, 1>(pt);
+template<int Dim, typename Body>
+ConstSlice<Body, Dim, 1>
+make_slice(Body const & pt) {
+    return ConstSlice<Body, Dim, 1>(pt);
 }
 
 /** ConstSlice of the ConstSlice<Dim, Offset> is ConstSlice<Dim, Offset + 1>.
  * It is convinient for us to slice by 1 position each time.
  */
-template<int Dim, template <typename PointImpl> class OrderPolicy, int Offset>
-ConstSlice<Dim, OrderPolicy, Offset + 1>
-make_slice(ConstSlice<Dim, OrderPolicy, Offset> const & sl) {
-    return ConstSlice<Dim, OrderPolicy, Offset + 1>(sl.getImpl());
+template<typename Body, int Dim, int Offset>
+ConstSlice<Body, Dim, Offset + 1>
+make_slice(ConstSlice<Body, Dim, Offset> const & sl) {
+    return ConstSlice<Body, Dim, Offset + 1>(sl.getImpl());
 }
 
 /**
