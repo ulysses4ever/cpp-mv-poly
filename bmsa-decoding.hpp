@@ -119,9 +119,10 @@ private:
         std::ostringstream log_oss;
         std::copy(basis.begin(), basis.end(),
                 std::ostream_iterator<BasisElem>(log_oss, " "));
-        LOG(INFO) << log_oss.str();
+        LOG(INFO) << "Basis for evaluation code: " << log_oss.str();
         // **********  ENF OF logging
 
+        // computing "known" syndroms
         using namespace std::tr1::placeholders;
         auto syndromComponentAtBasisElem =
             [this,&received](BasisElem const & be) -> typename SyndromeType::value_type {
@@ -138,17 +139,19 @@ private:
         };
         std::transform(basis.begin(), basis.end(),
                 std::inserter(syn, syn.begin()), syndromComponentAtBasisElem);
+        // END OF computing "known" syndroms
 
         // **********  logging
         log_oss.str("");
         std::for_each(syn.begin(), syn.end(),
                 [&log_oss](typename SyndromeType::value_type const & s) {
-            log_oss << makeNtlPowerPrinter(s.second) << " ";
-
-        });
-        LOG(INFO) << log_oss.str();
+                    log_oss << makeNtlPowerPrinter(s.second) << " ";
+                }
+        );
+        LOG(INFO) << "Known syndroms: " << log_oss.str();
         // **********  ENF OF logging
 
+        // compute error locators for the known syndroms
         BmsaT bmsa(syn, ++basis.back());
         auto minset = bmsa.computeMinimalSet();
 
@@ -156,7 +159,7 @@ private:
         //log_oss.str("");
         for_each(minset.begin(), minset.end(),
                 [/*&log_oss*/](typename BmsaT::PolynomialCollection::value_type const & p) {
-                    LOG(INFO) <<
+                    LOG(INFO) << "Error locator: " <<
                             makePowerPrinter< OrderPolicyHolder::template impl >(p)
                             << std::endl;
                 }
@@ -164,11 +167,11 @@ private:
 //        LOG(INFO) << log_oss.str();
         // **********  ENF OF logging
 
-        return minset;
 //        while(true) { // TODO: define stop condition
 //            frmv();
 //            ++k; // TODO: ++ should be correctly implemented for given OrderPolicy
 //        }
+        return minset;
     }
 
 public:
