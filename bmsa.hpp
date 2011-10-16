@@ -37,20 +37,25 @@ class BMSAlgorithm {
 public:
     static const int Dim = PolynomialT::VAR_CNT;
 
-    typedef std::map< Point<Dim, OrderPolicy>, PolynomialT > PointPolyMap;
+    typedef Point<Dim, OrderPolicy> PointT;
+
+    typedef std::map< PointT, PolynomialT > PointPolyMap;
+
+    typedef std::list< PolynomialT > PolynomialCollection;
+
+    typedef std::list< PointT > PointCollection;
 
 private:
-    typedef std::list< Point<Dim, OrderPolicy> > PointCollection;
 
     typedef typename PolynomialT::CoefT CoefT;
 
-    typedef std::map< Point<Dim, OrderPolicy>, CoefT > PointCoefMap;
+    typedef std::map< PointT, CoefT > PointCoefMap;
 
     PointPolyMap G;
 
     const CoefT ZERO;
 
-    Point<Dim, OrderPolicy> seqLen;
+    PointT seqLen;
 
     PointCollection oldDeltaPoints;
 
@@ -60,7 +65,7 @@ private:
 
 public:
 
-    void infoUpdate(Point<Dim, OrderPolicy> const & k) {
+    void infoUpdate(PointT const & k) {
         using std::tr1::bind;
         using std::tr1::cref;
         using namespace std::tr1::placeholders;
@@ -170,14 +175,12 @@ public:
 //            cout << endl;
     }
 
-    typedef std::list< PolynomialT > PolynomialCollection;
-
     BMSAlgorithm(
             SeqT & seq_,
-            Point<Dim, OrderPolicy> const & seqLen_) :
+            PointT const & seqLen_) :
                 ZERO(CoefficientTraits<CoefT>::addId()),
                 seqLen(seqLen_), seq(seq_) {
-        F.insert(std::make_pair(Point<Dim, OrderPolicy>(), PolynomialT::getId()));
+        F.insert(std::make_pair(PointT(), PolynomialT::getId()));
     }
 
     PolynomialCollection computeMinimalSet() {
@@ -190,8 +193,16 @@ public:
 
     }
 
-    PointPolyMap const & getF() {
+    PointPolyMap const & getF() const {
         return F;
+    }
+
+    PointCollection const & getDeltaPoints() const {
+        return oldDeltaPoints;
+    }
+
+    PointT & getSeqLen() {
+        return seqLen;
     }
 
 private:
