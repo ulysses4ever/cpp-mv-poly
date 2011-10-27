@@ -23,20 +23,15 @@
 
 namespace mv_poly {
 
-//template<typename T, int N>
-//struct CurvePoint {
-//    std::array<T, N> data;
-//};
-
 template<
     int Dim,
-    typename Field,
-    typename ECCodeParams/*,
-    template <typename> class OrderPolicy = GradedAntilexMonomialOrder*/
+    typename ECCodeParams
 >
 class BMSDecoding {
 
 public:
+
+    typedef typename ECCodeParams::Field Field;
 
     typedef typename ECCodeParams::BasisElem BasisElem;
 
@@ -74,7 +69,7 @@ private:
         typedef typename PolynomialCollection::value_type PolyT;
         typedef CoefficientTraits<typename PolyT::CoefT> CoefTr;
         ErrorPositions result;
-        int idx = 1;
+        int idx = 0;
         std::for_each(curvePoints.begin(), curvePoints.end(),
                 [&result,&idx,&polys](CurvePoint const & cp) {
                     bool root_for_all = std::accumulate(polys.begin(),
@@ -106,8 +101,8 @@ private:
     }
 
     // Feng-Rao majority voting
-    void frmv() {
-
+    void frmv(BmsaT & bmsa) {
+        // compute Г_k
     }
 
     PolynomialCollection
@@ -167,10 +162,10 @@ private:
 //        LOG(INFO) << log_oss.str();
         // **********  ENF OF logging
 
-//        while(true) { // TODO: define stop condition
-//            frmv();
-//            ++k; // TODO: ++ should be correctly implemented for given OrderPolicy
-//        }
+        while(false) { // TODO: define stop condition
+            frmv(bmsa);
+//            ++bmsa; // TODO: ++ should be correctly implemented for given OrderPolicy
+        }
         return minset;
     }
 
