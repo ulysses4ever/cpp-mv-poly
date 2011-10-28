@@ -102,6 +102,8 @@ FieldElem computeMonomAtPoint(Monom const & m, CurvePoint const & p) {
 template<int r, typename FieldElem>
 struct HermitianCodeParams {
 
+    typedef FieldElem Field;
+
     typedef WeightedOrder<r, r + 1> OrderPolicyHolder;
 
     typedef decltype(getHermitianCodeBasis<r>(42)) BasisCollection;
