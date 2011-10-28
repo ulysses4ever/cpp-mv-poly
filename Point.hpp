@@ -9,8 +9,10 @@
 #ifndef POINT_HPP_
 #define POINT_HPP_
 
+#include <array>
 #include <algorithm>
 #include <iterator>
+#include <initializer_list>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -18,7 +20,6 @@
 
 #include <cstdio>
 
-#include <tr1/array>
 #include <tr1/functional>
 
 #include <boost/foreach.hpp>
@@ -55,7 +56,7 @@ template<
     int Dim,
     template <typename PointImpl> class OrderPolicy
 //        = GradedAntilexMonomialOrder
-> class Point : OrderPolicy< std::tr1::array<long, Dim> > {
+> class Point : OrderPolicy< std::array<long, Dim> > {
 
     typedef typename Point::PointImplType ImplType; // PointImplType inherited
                                             // from GradedAntilexMonomialOrder
@@ -66,7 +67,7 @@ template<
 public:
     /// Creates point (0, 0, ..., 0).
     Point() {
-        data.assign(0);
+        data.fill(0);
     }
 
     bool operator<(Point<Dim, OrderPolicy> const & other) const {
@@ -80,6 +81,10 @@ public:
     typedef typename ImplType::reference reference;
 
     typedef typename ImplType::const_reference const_reference;
+
+    Point(std::initializer_list<value_type> data) {
+        std::copy(data.begin(), data.end(), this->data.begin());
+    }
 
     reference
     operator[](size_type n) {
