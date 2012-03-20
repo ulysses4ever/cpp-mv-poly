@@ -9,6 +9,7 @@
 #define BMSA_DECODING_HPP_
 
 #include <array>
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -118,11 +119,11 @@ private:
         // **********  ENF OF logging
 
         // computing "known" syndroms
-        using namespace std::tr1::placeholders;
+        using namespace std::placeholders;
         auto syndromComponentAtBasisElem =
             [this,&received](BasisElem const & be) -> typename SyndromeType::value_type {
                 auto tit = boost::make_transform_iterator(this->curvePoints.begin(),
-                        std::tr1::bind(
+                        std::bind(
                             computeMonomAtPoint<Field, BasisElem, CurvePoint>,
                             be,
                             _1));
