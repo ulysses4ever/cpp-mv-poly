@@ -20,10 +20,9 @@
 
 #include <cstdio>
 
-#include <tr1/functional>
+#include <functional>
 
 #include <boost/foreach.hpp>
-//#include <boost/lexical_cast.hpp>
 
 //#include <lpsolve/lp_lib.h>
 #include <glpk.h>

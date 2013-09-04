@@ -20,6 +20,7 @@
 #include <tr1/functional>
 
 #include <boost/iterator/transform_iterator.hpp>
+#include <boost/range/iterator_range.hpp>
 
 #include "mv_poly.hpp"
 #include "Utilities.hpp"
@@ -85,10 +86,10 @@ public:
                     CoefT b = conv(f, seq, degF, k);
                     discr[degF] = b;
                     Point<Dim, OrderPolicy> c = k - degF;
-                    if (b != ZERO) {
+//                    if (b != ZERO) {
 //                        cout << "failed: " << f << endl;
 //                        cout << "span: " << c << endl;
-                    }
+//                    }
                     if (b != ZERO &&
                             !byCoordinateLessThenAny(
                                     c,
@@ -165,6 +166,7 @@ public:
             G = newG;
             oldDeltaPoints.clear();
             oldDeltaPoints.splice(oldDeltaPoints.end(), deltaPoints);
+            // this splice means: move contents of deltaPoints to oldDeltaPoints
 
 //            cout << "F: " << endl;
 //            copy(F.begin(), F.end(),
@@ -203,6 +205,10 @@ public:
 
     PointT & getSeqLen() {
         return seqLen;
+    }
+
+    SeqT & getSeq() {
+        return seq;
     }
 
 private:
