@@ -71,7 +71,7 @@ public:
     }
 
     bool operator<(Point<Dim, OrderPolicy> const & other) const {
-        return totalLess(data, other.data);
+        return this->totalLess(data, other.data);
     }
 
     typedef typename ImplType::value_type value_type;
@@ -443,7 +443,7 @@ template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
 Point<Dim, OrderPolicy>&
 Point<Dim, OrderPolicy>::operator++() {
-    inc(data);
+    this->inc(data);
     return *this;
 }
 

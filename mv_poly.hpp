@@ -645,7 +645,7 @@ Polynomial<T> operator<<(Polynomial<T> p, int m) {
     return p <<= m;
 }
 
-template<typename T>
+/*template<typename T>
 Polynomial<T> Polynomial<T>::operator+=(Polynomial<T> const & p) {
     int degDiff = (this->data).size() - p.data.size();
     if (degDiff < 0) { // if p has greater (“one-dimensional”) degree then
@@ -669,6 +669,27 @@ Polynomial<T> Polynomial<T>::operator+=(Polynomial<T> const & p) {
                 ++itThis, ++itP) {
             *itThis += *itP;
         }
+    }
+    return *this;
+}*/
+
+template<typename T>
+Polynomial<T> Polynomial<T>::operator+=(Polynomial<T> const & p) {
+    int degDiff = (this->data).size() - p.data.size();
+    typename StorageT::const_iterator commonPartDelimeter;
+    if (degDiff < 0) {
+        commonPartDelimeter = p.data.begin();
+        std::advance(commonPartDelimeter, data.size());
+        std::copy(commonPartDelimeter, p.data.end(), std::back_inserter(data));
+    } else {
+        commonPartDelimeter = p.data.end();
+    }
+    typename StorageT::iterator itThis = data.begin();
+    for (
+            typename StorageT::const_iterator itP = p.data.begin();
+            itP != commonPartDelimeter;
+            ++itThis, ++itP) {
+        *itThis += *itP;
     }
     return *this;
 }
