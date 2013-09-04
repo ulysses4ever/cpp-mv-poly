@@ -14,6 +14,9 @@
 #include <vector>
 
 #include <boost/iterator/transform_iterator.hpp>
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/iterator_range.hpp>
+//#include <boost/bind.hpp>
 
 #include <glog/logging.h>
 
@@ -35,6 +38,8 @@ public:
     typedef typename ECCodeParams::Field Field;
 
     typedef typename ECCodeParams::BasisElem BasisElem;
+
+    typedef BasisElem PointT;
 
     typedef typename ECCodeParams::CurvePoint CurvePoint;
 
@@ -103,7 +108,43 @@ private:
 
     // Feng-Rao majority voting
     void frmv(BmsaT & bmsa) {
-        // compute Г_k
+        typedef std::map<PointT, PointT> PointToPointMap;
+        PointToPointMap voters; // Г_k with support points from \sigma_k attached
+        PointT k = bmsa.getSeqLen();     // k - kurrent step :)
+
+        // 1. Compute Г_k
+        for (
+             auto it = bmsa.getF().begin();
+             it != bmsa.getF().end();
+             ++it
+             ) {
+            PointT const & s = it->first;
+            for (PointT t = s; t < k; ++t) {
+                // we assume tha going from s to k following monomial order
+                // yields all points t s.t. s <= t <= k where <= stands for
+                // by-coordinate comparison (natural partial order)
+                bool l1 = byCoordinateLess(s, t);
+                bool l2 = byCoordinateLess(t, k);
+                bool g = byCoordinateGreaterThenAny(k - t, bmsa.getF() | boost::adaptors::map_keys);
+                if (
+                        l1 &&
+                        l2 &&
+                        g) {
+                    voters[t] = s;
+                }
+            }
+        }
+        // **********  logging (Г_k)
+        LOG(INFO) << "Gamma_k has " << voters.size() << " elements";
+        std::ostringstream log_oss;
+        std::copy(voters.begin(), voters.end(),
+                std::ostream_iterator<typename PointToPointMap::value_type>(log_oss, " "));
+        LOG(INFO) << "Gamma_k: " << log_oss.str();
+        // **********  ENF OF logging
+
+
+        // 2. Compute votes and choose winner
+
     }
 
     PolynomialCollection
@@ -119,6 +160,7 @@ private:
         // **********  ENF OF logging
 
         // computing "known" syndroms
+        //using namespace boost;//
         using namespace std::placeholders;
         auto syndromComponentAtBasisElem =
             [this,&received](BasisElem const & be) -> typename SyndromeType::value_type {
@@ -163,10 +205,11 @@ private:
 //        LOG(INFO) << log_oss.str();
         // **********  ENF OF logging
 
-        while(false) { // TODO: define stop condition
+//        std::cout << "Hi!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+//        while(false) { // TODO: define stop condition
             frmv(bmsa);
 //            ++bmsa; // TODO: ++ should be correctly implemented for given OrderPolicy
-        }
+//        }
         return minset;
     }
 
