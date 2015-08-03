@@ -408,7 +408,7 @@ void runSuite(){
     PolyIOSuite.push_back(CUTE(polySubscript));
     PolyIOSuite.push_back(CUTE(testPolyToDegCoefMapConversion));
     PolyIOSuite.push_back(CUTE(polyPowerPrinting));
-    cute::ide_listener lis;
+    cute::ide_listener</* empty for no IDE listener in standalone CUTE 2 */> lis;
     cute::makeRunner(lis)(PolyIOSuite, "The Polynomial Input-Output Suite");
 
     cute::suite PointSuite;
