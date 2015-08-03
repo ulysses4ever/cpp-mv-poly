@@ -57,8 +57,10 @@ template<
 //        = GradedAntilexMonomialOrder
 > class Point : OrderPolicy< std::array<long, Dim> > {
 
+    typedef OrderPolicy< std::array<long, Dim> > MyOrderPolicy;
+
     typedef typename Point::PointImplType ImplType; // PointImplType inherited
-                                            // from GradedAntilexMonomialOrder
+                                            // from OrderPolicy
                                             // to avoid duplication
 
     ImplType data;
@@ -70,7 +72,7 @@ public:
     }
 
     bool operator<(Point<Dim, OrderPolicy> const & other) const {
-        return this->totalLess(data, other.data);
+        return MyOrderPolicy::totalLess(data, other.data);
     }
 
     typedef typename ImplType::value_type value_type;
@@ -442,7 +444,7 @@ template<int Dim, template <typename PointImpl> class OrderPolicy>
 inline
 Point<Dim, OrderPolicy>&
 Point<Dim, OrderPolicy>::operator++() {
-    this->inc(data);
+    MyOrderPolicy::inc(data);
     return *this;
 }
 
