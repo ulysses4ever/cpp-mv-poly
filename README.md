@@ -2,10 +2,10 @@
 
 (Automatically exported from code.google.com/p/cpp-mv-poly)
 
-In the project we create an implementation of multivariate polynomials arithmetic which use modern template 
-techniques, is be able to work with different fields (rings) for polynomial coefficients (e.g. we used to apply NTL (cf. [NTL]) data structures which represent those notions). As a part of our “technical 
+In the project we create an implementation of multivariate polynomials arithmetic which use sophisticated template 
+techniques, and is be able to work with different implementations of algebraic structures, fields, rings, etc. for polynomial coefficients (e.g. we used to apply NTL (cf. [NTL]) data structures which represent those notions). As a part of our “technical 
 research” on using template techniques we are interested in applying template programming design patterns (e.g. 
-from [VJ]) as well as adapting well-known OOP design patterns descussed in [GoF] for the objects from abstract algebra. More precisely the main goal of the project is construction of BMS-algorithm (cf. [CLO'S, ch. 10]).
+from [VJ]) as well as adapting well-known OOP design patterns discussed in [GoF] for the objects from abstract algebra. More precisely the main goal of the project is construction of BMS-algorithm (cf. [CLO'S, ch. 10]).
 
 ### Dependencies
 
@@ -16,7 +16,7 @@ from [VJ]) as well as adapting well-known OOP design patterns descussed in [GoF]
 
 ### Build
 
-The project is headers-only, so in order to try it out you have to use some test source code (in .cpp-file). Such a role is played by Test.cpp from a repo. So current version of project could be build e.g. via:
+The project is headers-only, so in order to try it out you have to use some test source code (in .cpp-file). This is examplified by `Test.cpp` from the repo. So current version of project could be tested e.g. via:
 
     g++ -std=c++11 -I/path/to/cute/cute_lib -o Test Test.cpp -lntl -lglpk
 
