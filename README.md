@@ -12,7 +12,7 @@ from [VJ]) as well as adapting well-known OOP design patterns discussed in [GoF]
   * [NTL 5+](http://shoup.net/ntl/): A Library for doing Number Theory;
   * [CUTE 2+](http://cute-test.com/projects/cute/wiki/CUTE_standalone): “C++ Unit Testing Easier”;
   * [GLPK](http://www.gnu.org/software/glpk/): GNU Linear Programming Kit;
-  * [google-glog](http://code.google.com/p/google-glog/): Logging library for C++ (when logging is turned off, library is not needed for building a project).
+  * [google-glog](http://code.google.com/p/google-glog/): Logging library for C++.
 
 ### Build
 
