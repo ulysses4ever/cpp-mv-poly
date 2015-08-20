@@ -20,22 +20,20 @@
 
 namespace mv_poly {
 
-// deadly want template aliases
-// typedef std::vector< Point<N, OrderPolicy> > BasisCollection<N, OrderPolicy>;
+// template alias for collection of basis elements in weighted order
+template<int N, int a, int b>
+using WeightetBasisCollection = std::vector< Point<N, WeightedOrder<a, b>::template impl > >;
 
 template<int r>
-std::vector< Point<2, WeightedOrder<r, r + 1>::template impl > >
+WeightetBasisCollection<2, r, r+1>
 getHermitianCodeBasis(int l) {
-    typedef Point<2, WeightedOrder<r, r + 1>::template impl > Pt;
-    std::vector< Pt > result;
+    typedef typename WeightetBasisCollection<2, r, r+1>::value_type Pt;
+    WeightetBasisCollection<2, r, r+1> result;
     result.reserve(l);
     Pt p;
-    std::generate_n(std::back_inserter(result), l,
-            std::bind<Pt (Pt::*)(int)>((&Pt::operator++),
-                    p,
-                    42 /* dummy argument for operator++(int) */));
-//    while (l-- > 0)
-//        result.push_back(p++);
+    std::generate_n(
+                    std::back_inserter(result), l,
+                    [&p]() { return p++; });
     return result;
 }
 
