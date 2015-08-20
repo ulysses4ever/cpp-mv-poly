@@ -16,7 +16,6 @@
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/iterator_range.hpp>
-//#include <boost/bind.hpp>
 
 #include <glog/logging.h>
 
@@ -24,6 +23,7 @@
 #include "bmsa.hpp"
 #include "mv_poly.hpp"
 #include "CurveArithmetic.hpp"
+#include "NtlPolynomials.hpp"
 
 namespace mv_poly {
 

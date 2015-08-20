@@ -19,6 +19,7 @@
 #include "mv_poly.hpp"
 #include "Point.hpp"
 #include "bmsa.hpp"
+#include "bmsa-decoding.hpp"
 #include "NtlUtilities.hpp"
 #include "NtlPolynomials.hpp"
 #include "CurveArithmetic.hpp"
@@ -271,7 +272,7 @@ void eval() {
     ASSERT_EQUAL(8, p1(pt));
 }
 
-void sakatasExamples() {
+void sakatasExample2D() {
     ostringstream os;
     typedef MVPolyType<2, NTL::GF2>::ResultT PolyT;
     PolyT u("[[0 1 0 1 0] [1 1 0 0] [0 1 0] [0 0] [0] [1]]");
@@ -284,7 +285,10 @@ void sakatasExamples() {
             "[[1 0] [1 1] [0]]\n"
             "[[1 0 1] [1 1] [1]]\n"
             "[[1 1] [1 0] [0] [1]]\n", os.str());
+}
 
+void sakatasExample3D() {
+    ostringstream os;
     Point<3> ptt;
     ptt[0] = 5; ptt[1] = 0; ptt[2] = 1;
     typedef MVPolyType<3, NTL::GF2>::ResultT PolyT3;
@@ -418,22 +422,23 @@ void runSuite(){
     cute::makeRunner(lis)(PointSuite, "The Point Suite");
 
     cute::suite PolynomialArithmeticSuite;
-    PolynomialArithmeticSuite.push_back(convolutionTest);
-    PolynomialArithmeticSuite.push_back(monomialMultiplication);
-    PolynomialArithmeticSuite.push_back(scalarMultiplication);
-    PolynomialArithmeticSuite.push_back(summation);
-    PolynomialArithmeticSuite.push_back(equality);
-    PolynomialArithmeticSuite.push_back(eval);
+    PolynomialArithmeticSuite.push_back(CUTE(convolutionTest));
+    PolynomialArithmeticSuite.push_back(CUTE(monomialMultiplication));
+    PolynomialArithmeticSuite.push_back(CUTE(scalarMultiplication));
+    PolynomialArithmeticSuite.push_back(CUTE(summation));
+    PolynomialArithmeticSuite.push_back(CUTE(equality));
+    PolynomialArithmeticSuite.push_back(CUTE(eval));
     cute::makeRunner(lis)(PolynomialArithmeticSuite,
             "The Polynomial Arithmetic Suite");
 
     cute::suite bmsaTestingSuite;
-    bmsaTestingSuite.push_back(sakatasExamples);
+    bmsaTestingSuite.push_back(CUTE(sakatasExample2D));//, "Sakata's Example in 2D");
+    bmsaTestingSuite.push_back(CUTE(sakatasExample3D));//, "Sakata's Example in 3D");
     cute::makeRunner(lis)(bmsaTestingSuite,
                 "The BMS-algorithm Testing Suite");
 
     cute::suite bmsaDecoding;
-    bmsaDecoding.push_back(curveArithmetic);
+    bmsaDecoding.push_back(CUTE(curveArithmetic));
     cute::makeRunner(lis)(bmsaDecoding,
                 "The BMS-algorithm-based Decoding Algorithm Testing Suite");
 }
@@ -441,5 +446,8 @@ void runSuite(){
 }  // namespace TestMVPoly
 
 int main() {
+    google::InitGoogleLogging("mv-poly");
+    google::InstallFailureSignalHandler();
+    LOG(INFO) << "Let the tests start!\n";
     TestMVPoly::runSuite();
 }
