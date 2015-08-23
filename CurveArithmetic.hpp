@@ -22,13 +22,13 @@ namespace mv_poly {
 
 // template alias for collection of basis elements in weighted order
 template<int N, int a, int b>
-using WeightetBasisCollection = std::vector< Point<N, WeightedOrder<a, b>::template impl > >;
+using WeightedBasisCollection = std::vector< Point<N, WeightedOrder<a, b>::template impl > >;
 
 template<int r>
-WeightetBasisCollection<2, r, r+1>
+WeightedBasisCollection<2, r, r+1>
 getHermitianCodeBasis(int l) {
-    typedef typename WeightetBasisCollection<2, r, r+1>::value_type Pt;
-    WeightetBasisCollection<2, r, r+1> result;
+    typedef typename WeightedBasisCollection<2, r, r+1>::value_type Pt;
+    WeightedBasisCollection<2, r, r+1> result;
     result.reserve(l);
     Pt p;
     std::generate_n(
@@ -106,7 +106,7 @@ struct HermitianCodeParams {
 
     typedef WeightedOrder<r, r + 1> OrderPolicyHolder;
 
-    typedef WeightetBasisCollection<DIM, r, r+1> BasisCollection;
+    typedef WeightedBasisCollection<DIM, r, r+1> BasisCollection;
 
     typedef typename BasisCollection::value_type BasisElem;
 
