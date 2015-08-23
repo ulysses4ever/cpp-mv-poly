@@ -8,6 +8,8 @@
 #ifndef UTILITIES_HPP_
 #define UTILITIES_HPP_
 
+#include <sstream>
+#include <string>
 #include <utility>
 #include <iostream>
 
@@ -25,6 +27,15 @@ inline
 std::ostream& operator<<(std::ostream & os, std::pair<T1, T2> const & p) {
     os << "(" << p.first << ", " << p.second << ")";
     return os;
+}
+
+template<typename M>
+std::string mapToStr(M const & m) {
+    std::ostringstream oss;
+    for (auto pr : m) 
+        oss
+              << pr.first  << " : "
+              << pr.second << " ";
 }
 
 } // namespace mv_poly

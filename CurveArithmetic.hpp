@@ -100,15 +100,17 @@ FieldElem computeMonomAtPoint(Monom const & m, CurvePoint const & p) {
 template<int r, typename FieldElem>
 struct HermitianCodeParams {
 
-    typedef FieldElem Field;
+    enum {DIM = 2};           // Hermitian curve is a plain curve
+
+    typedef FieldElem Field;  // NOTE: Hermitian curve is defined over F_{q^2}
 
     typedef WeightedOrder<r, r + 1> OrderPolicyHolder;
 
-    typedef decltype(getHermitianCodeBasis<r>(42)) BasisCollection;
+    typedef WeightetBasisCollection<DIM, r, r+1> BasisCollection;
 
     typedef typename BasisCollection::value_type BasisElem;
 
-    typedef std::array<FieldElem, 2> CurvePoint;
+    typedef std::array<FieldElem, DIM> CurvePoint;
 
     typedef decltype(getPlainHermitianCurveRationalPoints<r,
             CurvePoint, FieldElem>()) CurvePointsCollection;

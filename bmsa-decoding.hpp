@@ -93,7 +93,7 @@ private:
         std::ostringstream log_oss;
         std::copy(result.begin(), result.end(),
                 std::ostream_iterator<int>(log_oss, " "));
-        LOG(INFO) << "error positions: " << log_oss.str();
+        LOG(INFO) << "Error positions: " << log_oss.str();
         // **********  ENF OF logging
 
         return result;
@@ -103,10 +103,10 @@ private:
     getErrorValues(
             FieldElemsCollection const & r,
             CurvePointsCollection const & locations) {
-
+        // Not Implemented Yet
     }
 
-    // Feng-Rao majority voting
+    // Feng-Rao majority voting: partially implemented
     void frmv(BmsaT & bmsa) {
         typedef std::map<PointT, PointT> PointToPointMap;
         PointToPointMap voters; // Г_k with support points from \sigma_k attached
@@ -144,7 +144,7 @@ private:
 
 
         // 2. Compute votes and choose winner
-
+        // Not implemented yet
     }
 
     PolynomialCollection
@@ -160,7 +160,6 @@ private:
         // **********  ENF OF logging
 
         // computing "known" syndroms
-        //using namespace boost;//
         using namespace std::placeholders;
         auto syndromComponentAtBasisElem =
             [this,&received](BasisElem const & be) -> typename SyndromeType::value_type {
@@ -194,21 +193,18 @@ private:
         auto minset = bmsa.computeMinimalSet();
 
         // **********  logging
-        //log_oss.str("");
         for_each(minset.begin(), minset.end(),
-                [/*&log_oss*/](typename BmsaT::PolynomialCollection::value_type const & p) {
+                [](typename BmsaT::PolynomialCollection::value_type const & p) {
                     LOG(INFO) << "Error locator: " <<
                             makePowerPrinter< OrderPolicyHolder::template impl >(p)
                             << std::endl;
                 }
         );
-//        LOG(INFO) << log_oss.str();
         // **********  ENF OF logging
 
-//        std::cout << "Hi!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-//        while(false) { // TODO: define stop condition
-            frmv(bmsa);
-//            ++bmsa; // TODO: ++ should be correctly implemented for given OrderPolicy
+//        while(true) { // TODO: define stop condition
+//            frmv(bmsa);
+//            ++bmsa;   // TODO: ++ should be correctly implemented for given OrderPolicy
 //        }
         return minset;
     }
@@ -219,15 +215,26 @@ public:
             size_t l)
     : l(l) {
         curvePoints = ECCodeParams::getRationalPoints();
+        
+        // Logging
+        LOG(INFO) << "Curve points";
+        for (auto cpt : curvePoints) {
+            LOG(INFO) << "("
+                      << makeNtlPowerPrinter(cpt[0])  << ", "
+                      << makeNtlPowerPrinter(cpt[1])   << ")";
+        }
     }
 
-    FieldElemsCollection decode(FieldElemsCollection const & r) {
+    // Should return FieldElemsCollection but getErrorValues NIY
+    ErrorPositions decode(FieldElemsCollection const & r) {
         FieldElemsCollection result;
-        ErrorPositions locations = getErrorLocations(
-                computeErrorLocatorPolynomials(r));
-//        FieldElemsCollection values = getErrorValues(locations);
+        ErrorPositions locations = 
+                                    getErrorLocations(
+                                        computeErrorLocatorPolynomials(r));
+        // FieldElemsCollection values = getErrorValues(locations);
         // correct r with locators and values...
-        return result;
+        // return result;
+        return locations;
     }
 }; // BMSDecoding
 

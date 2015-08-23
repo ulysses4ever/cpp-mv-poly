@@ -529,6 +529,11 @@ std::string toString(Polynomial<T> const & p) {
     return os.str();
 }
 
+template<typename T>
+std::string mapToStr(Polynomial<T> const & p) {
+    return toString(p);
+}
+
 /**
  * Multiply polynomial on a scalar.
  * @param c Scalar to multiply on.

@@ -206,7 +206,10 @@ public:
     }
 
     PolynomialCollection computeMinimalSet() {
-        LOG(INFO) << "bmsa<" << Dim << ">::computeMinimalSet for u = " << seq;
+        LOG(INFO) << "bmsa<" << Dim << ">::computeMinimalSet";
+        // can't print seq as we SeqT can be various things 
+         LOG(INFO) << mapToStr(seq);
+                
         oldDeltaPoints.clear();
         // scanning input sequense step-by-step, following monomial order
         for (Point<Dim, OrderPolicy> k; k < seqLen; ++k) {

@@ -402,8 +402,35 @@ void curveArithmetic() {
             NTL::power(x, 1) + NTL::power(x, 0));
 }
 
+void bmsaDecodingCLOS05Example() {
+    typedef NTL::GF2 PrimeField;
+    typedef typename NTLPrimeFieldTtraits<PrimeField>::ExtField ExtField;
 
-void runSuite(){
+    initExtendedField<PrimeField>("[1 1 1]");
+    //ExtField a = FieldElemTraits<ExtField>::getPrimitive();
+    FieldElemTraits<ExtField>::setPrimitive(getPrimitive<ExtField>());
+
+    const int Dim = 2;
+    const int r = 2; // field F_q, where q = r^2 -- we have F_4, so r = 2
+    const int n = 8;
+    typedef BMSDecoding<Dim, HermitianCodeParams<r, ExtField> > BMSDecoderT;
+    BMSDecoderT bms_decoder(5); // C_4 code
+    BMSDecoderT::FieldElemsCollection e;
+    e.resize(n);
+
+    // error positions!
+    int pos1 = 1, pos2 = 7;
+    e[pos1] = FieldElemTraits<ExtField>::multId(); // = 1
+    e[pos2] = e[pos1];
+
+    auto locs = bms_decoder.decode(e);
+    auto refLocs = decltype(locs){pos1, pos2};
+    ASSERT_EQUAL(locs, refLocs);
+}
+
+void runSuites() {
+    cute::ide_listener</* empty for no IDE listener in standalone CUTE 2 */> lis;
+
     cute::suite PolyIOSuite;
     PolyIOSuite.push_back(CUTE(ioTestFor1Poly));
     PolyIOSuite.push_back(CUTE(outputTest));
@@ -412,14 +439,12 @@ void runSuite(){
     PolyIOSuite.push_back(CUTE(polySubscript));
     PolyIOSuite.push_back(CUTE(testPolyToDegCoefMapConversion));
     PolyIOSuite.push_back(CUTE(polyPowerPrinting));
-    cute::ide_listener</* empty for no IDE listener in standalone CUTE 2 */> lis;
     cute::makeRunner(lis)(PolyIOSuite, "The Polynomial Input-Output Suite");
 
     cute::suite PointSuite;
     PointSuite.push_back(CUTE(pointComparison));
     PointSuite.push_back(CUTE(pointIncreasing));
     PointSuite.push_back(CUTE(pointCollectionOperations));
-    cute::makeRunner(lis)(PointSuite, "The Point Suite");
 
     cute::suite PolynomialArithmeticSuite;
     PolynomialArithmeticSuite.push_back(CUTE(convolutionTest));
@@ -428,19 +453,23 @@ void runSuite(){
     PolynomialArithmeticSuite.push_back(CUTE(summation));
     PolynomialArithmeticSuite.push_back(CUTE(equality));
     PolynomialArithmeticSuite.push_back(CUTE(eval));
-    cute::makeRunner(lis)(PolynomialArithmeticSuite,
-            "The Polynomial Arithmetic Suite");
 
     cute::suite bmsaTestingSuite;
-    bmsaTestingSuite.push_back(CUTE(sakatasExample2D));//, "Sakata's Example in 2D");
-    bmsaTestingSuite.push_back(CUTE(sakatasExample3D));//, "Sakata's Example in 3D");
-    cute::makeRunner(lis)(bmsaTestingSuite,
-                "The BMS-algorithm Testing Suite");
+    bmsaTestingSuite.push_back(CUTE(sakatasExample2D));
+    bmsaTestingSuite.push_back(CUTE(sakatasExample3D));
 
     cute::suite bmsaDecoding;
     bmsaDecoding.push_back(CUTE(curveArithmetic));
+    bmsaDecoding.push_back(CUTE(bmsaDecodingCLOS05Example));
+
+    cute::makeRunner(lis)(PointSuite, 
+            "The Point Suite");
+    cute::makeRunner(lis)(PolynomialArithmeticSuite,
+            "The Polynomial Arithmetic Suite");
+    cute::makeRunner(lis)(bmsaTestingSuite,
+            "The BMS-algorithm Testing Suite");
     cute::makeRunner(lis)(bmsaDecoding,
-                "The BMS-algorithm-based Decoding Algorithm Testing Suite");
+            "The BMS-algorithm-based Decoding Algorithm Testing Suite");
 }
 
 }  // namespace TestMVPoly
@@ -449,5 +478,5 @@ int main() {
     google::InitGoogleLogging("mv-poly");
     google::InstallFailureSignalHandler();
     LOG(INFO) << "Let the tests start!\n";
-    TestMVPoly::runSuite();
+    TestMVPoly::runSuites();
 }
